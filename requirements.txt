@@ -1,0 +1,6 @@
+(This should be included in the custom python enviroment (p34env))
+
+Python 3(.4)
+Flask
+PyYAML (pip install PyYAML)
+sqlalchemy

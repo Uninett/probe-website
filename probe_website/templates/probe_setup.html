@@ -1,0 +1,101 @@
+{% extends "master.html" %}
+
+{% block title %}Probe setup{% endblock %}
+
+{% block body %}
+
+<h1>Probe setup</h1>
+<p class="lead">Set these values after having installed the downloaded image and connected the probes to the Internet</p>
+
+{% if message is string and message != '' %}
+<p style="color:red;">{{ message }}</p>
+<br/>
+{% endif %}
+
+<form method="POST">
+  <h2>Basic info</h2>
+  <p>This information makes it easier to identify individual probes and to contact you if something happens.</p><br/>
+  <div class="form-horizontal">
+
+    <!-- Basic entries -->
+    {% for entry in required %}
+    <div class="form-group">
+      <label class="col-sm-2 control-label">{{ entry.description }}</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="{{ entry.name }}" value="{{ entry.value }}" {% if entry.name == 'probe_id' %}pattern="(([0-9a-fA-F]:?){2}){5}[0-9a-fA-F]{2}"{% endif %} required/>
+      </div>
+    </div>
+    {% endfor %}
+
+<!--     <1!-- ID selection --1> -->
+<!--     <div class="form-group"> -->
+<!--       <label class="col-sm-2 control-label">Probe ID</label> -->
+<!--       <div class="col-sm-10"> -->
+<!--         <div class="radio" align="left"> -->
+<!--           <label> -->
+<!--             <input type="radio" name="probe_id" value="mac_id" checked> -->
+<!--             Use MAC address as ID -->
+<!--           </label> -->
+<!--         </div> -->
+<!--         <div class="radio" align="left"> -->
+<!--           <label> -->
+<!--             <input type="radio" name="probe_id" value="custom_id"/> -->
+<!--             <input type="text" class="form-control" name="custom_id"/> -->
+<!--           </label> -->
+<!--         </div> -->
+<!--       </div> -->
+<!--     </div> -->
+
+  </div>
+  <br/>
+
+  <button type="submit" class="btn btn-lg btn-default" name="save">Save configuration</button>
+
+  <h2>Configuration for test scripts</h2><br/>
+  <div class="row">
+    <div class="col-md-12">
+      <table class="table table-bordered">
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Script filename</th>
+            <th>Arguments</th>
+            <th>Minute interval</th>
+            <th>Enabled</th>
+          </tr>
+        </thead>
+
+        <!-- Script configurations -->
+        <tbody>
+
+        {% for script in scripts %}
+          <tr>
+            <td>
+              <textarea class="form-control" name="description" rows="2" disabled>{{ script.name }}</textarea>
+            </td>
+            <td>
+              <input type="text" class="form-control" name="script_file" value="{{ script.script_file }}" disabled/>
+            </td>
+            <td>
+              <input type="text" class="form-control" name="args" value="{% if script.args != None %}{{ script.args }}{% endif %}" disabled/>
+            </td>
+            <td>
+              <input type="number" class="form-control" name="interval" value="{{ script.minute_interval }}" required/>
+            </td>
+            <td>
+              <label>
+                <input type="checkbox" name="enabled" {% if script.enabled %}checked{% endif %} {% if script.required %}disabled/><br/>(Required){% else %}/>{% endif %}
+              </label>
+            </td>
+          </tr>
+        {% endfor %}
+
+        </tbody>
+      </table>
+    </div>
+  </div>
+  <br/>
+  <button type="submit" class="btn btn-lg btn-default" name="save">Save configuration</button>
+</form>
+
+{% endblock %}

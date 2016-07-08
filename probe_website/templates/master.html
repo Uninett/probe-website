@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- <meta name="description" content=""> -->
+    <!-- <meta name="author" content=""> -->
+    <!-- <link rel="icon" href="../../favicon.ico"> -->
+
+    <title>{% block title %}{% endblock %}</title>
+
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/starter-template.css') }}" rel="stylesheet">
+  </head>
+
+  <body>
+
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <a class="navbar-brand" href="{{ url_for('index') }}">UNINETT WiFi probes</a>
+        </div>
+        <div id="navbar" class="collapse navbar-collapse">
+          <ul class="nav navbar-nav">
+
+            <li {% if request.url_rule.endpoint == "index" %}class="active"{% endif %}>
+              <a href="{{ url_for('index') }}">Home</a>
+            </li>
+            <li {% if request.url_rule.endpoint == "download_image" %}class="active"{% endif %}>
+              <a href="{{ url_for('download_image') }}">Download image</a>
+            </li>
+            <li {% if request.url_rule.endpoint == "probes" %}class="active"{% endif %}>
+              <a href="{{ url_for('probes') }}">Probes</a>
+            </li>
+            <!-- <li {% if request.url_rule.endpoint == "probe_setup" %}class="active"{% endif %}> -->
+            <!--   <a href="{{ url_for('probe_setup') }}">Probe setup</a> -->
+            <!-- </li> -->
+
+          </ul>
+        </div><!--/.nav-collapse -->
+      </div>
+    </nav>
+
+    <div class="container">
+
+      <div class="starter-template">
+
+          {% block body %}{% endblock %}
+
+      </div>
+
+    </div><!-- /.container -->
+  </body>
+</html>

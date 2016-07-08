@@ -1,0 +1,51 @@
+{% extends "master.html" %}
+
+{% block title %}Download image{% endblock %}
+
+{% block body %}
+
+<h1>Download image</h1>
+<br/>
+<p class="lead">Fill out the form and click the button to generate and download a custom image file (.img) for the wifi probe(s).</p>
+<br/>
+
+<form class="form-horizontal" method="POST">
+  <h2>Network configuration</h2>
+  <p>This information will be used by the probe to initially connect to the Internet, so it can communicate with our server and initiate the setup procedure.</p>
+    <h3>Required</h3>
+
+    <!-- Required entries -->
+    {% for entry in required %}
+    <div class="form-group">
+      <label class="col-sm-2 control-label">{{ entry.description }}</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="{{ entry.name }}" required/>
+      </div>
+    </div>
+    {% endfor %}
+
+    <!-- Certificate file -->
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Certificate</label>
+      <div class="col-sm-10">
+        <input type="file" class="form-control" name="certificate" required/>
+      </div>
+    </div>
+    <h3>Optional</h3>
+    <p>These values can probably be left as they stand.</p>
+
+    <!-- Optional entries -->
+    {% for entry in optional %}
+    <div class="form-group">
+      <label class="col-sm-2 control-label">{{ entry.description }}</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="{{ entry.name }}" value="{{ entry.value }}" required/>
+      </div>
+    </div>
+    {% endfor %}
+
+  <br/>
+  <button type="submit" class="btn btn-lg btn-default" name="download">Download image</button>
+</form>
+
+{% endblock %}
