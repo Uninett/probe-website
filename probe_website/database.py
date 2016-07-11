@@ -2,8 +2,8 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from re import fullmatch
-from probe_website import util
-
+from probe_website import util, settings
+from probe_website import ansible_interface as ansible
 
 # The models module depends on this, so that's why it's global
 Base = declarative_base()
@@ -32,7 +32,7 @@ class Database():
     def shutdown_session(self):
         self.session.remove()
 
-    def add_probe(self, name, custom_id, location=None, contact_person=None, contact_email=None):
+    def add_probe(self, username, probe_name, custom_id, location=None, contact_person=None, contact_email=None, scripts=None):
         ''' 
         Creates a probe instance, adds it to the database session, and returns
         it to the caller
@@ -41,14 +41,28 @@ class Database():
         if not self.is_valid_id(custom_id):
             return None
 
-        probe = Probe(name, util.convert_mac(custom_id, mode='storage'),
+        probe = Probe(probe_name, util.convert_mac(custom_id, mode='storage'),
                       location, contact_person, contact_email)
         self.session.add(probe)
+
+        if scripts is None:
+            self.load_default_scripts(probe, username)
+
         return probe
 
-    def add_script(self, probe, description, filename, args, minute_interval, enabled):
-        script = Script(description, filename, args, minute_interval, enabled)
+    def add_script(self, probe, description, filename, args, minute_interval, enabled, required):
+        script = Script(description, filename, args, minute_interval, enabled, required)
         probe.scripts.append(script)
+
+    def load_default_scripts(self, probe, username):
+        for script in ansible.load_default_script_configs(username):
+            required = False
+            if 'required' in script:
+                required = script['required']
+
+            self.add_script(probe, script['name'], script['script_file'],
+                            script['args'], script['minute_interval'],
+                            script['enabled'], required)
 
     def is_valid_id(self, probe_id):
         if not self.is_valid_string(probe_id):
@@ -86,6 +100,39 @@ class Database():
             probe.contact_person = contact_person
         if self.is_valid_string(contact_email):
             probe.contact_email = contact_email
+
+        return True
+
+    def update_script(self, probe, script_id, name=None, script_file=None,
+                      args=None, minute_interval=None, enabled=None):
+        if probe is None:
+            return False
+
+        script = self.get_script(probe, script_id)
+        if script is None:
+            return False
+
+        if self.is_valid_string(name):
+            script.name = name
+        if self.is_valid_string(script_file):
+            script.script_file = script_file
+        if self.is_valid_string(args):
+            script.args = args
+        
+        # This whole checking should be redone (both for this method and for update_probe)
+        try:
+            int(minute_interval)
+        except:
+            pass
+        else:
+            script.minute_interval = int(minute_interval)
+
+        try:
+            script.enabled = bool(enabled)
+        except:
+            pass
+        else:
+            script.enabled = bool(enabled)
 
         return True
 
@@ -127,7 +174,9 @@ class Database():
                     'script_file': script.filename,
                     'args': script.args,
                     'minute_interval': script.minute_interval,
-                    'enabled': script.enabled
+                    'enabled': script.enabled,
+                    'required': script.required,
+                    'id': script.id
             }
             scripts.append(data_entry)
         return scripts
@@ -135,6 +184,9 @@ class Database():
     def get_probe(self, probe_id):
         probe_id = util.convert_mac(probe_id, mode='storage')
         return self.session.query(Probe).filter(Probe.custom_id == probe_id).first()
+
+    def get_script(self, probe, script_id):
+        return self.session.query(Script).filter(Script.id == script_id).first()
 
     def remove_probe(self, probe_custom_id):
         probe = self.get_probe(probe_custom_id)

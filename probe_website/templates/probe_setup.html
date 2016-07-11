@@ -49,9 +49,33 @@
   </div>
   <br/>
 
-  <button type="submit" class="btn btn-lg btn-default" name="save">Save configuration</button>
+  <button type="submit" class="btn btn-lg btn-default" name="action" value="save">Save configuration</button>
 
-  <h2>Configuration for test scripts</h2><br/>
+  <h2>Configuration for test scripts</h2>
+
+  <!-- <1!-- Choose default or custom config --1> -->
+  <!-- <table class="table table-bordered table-striped"> -->
+  <!--   <tr> -->
+  <!--     <td> -->
+  <!--       <div class="radio"> -->
+  <!--         <label> -->
+  <!--           <input type="radio" name="config_type" value="default" id="default_config"  checked> -->
+  <!--           Use <b>default</b> configuration -->
+  <!--         </label> -->
+  <!--       </div> -->
+  <!--     </td> -->
+  <!--     <td> -->
+  <!--       <div class="radio"> -->
+  <!--         <label> -->
+  <!--           <input type="radio" name="config_type" value="default"> -->
+  <!--           Use <b>custom</b> configuration -->
+  <!--         </label> -->
+  <!--       </div> -->
+  <!--     </td> -->
+  <!--   </tr> -->
+  <!-- </table> -->
+
+  <!-- Script configurations -->
   <div class="row">
     <div class="col-md-12">
       <table class="table table-bordered">
@@ -65,26 +89,25 @@
           </tr>
         </thead>
 
-        <!-- Script configurations -->
         <tbody>
 
         {% for script in scripts %}
           <tr>
             <td>
-              <textarea class="form-control" name="description" rows="2" disabled>{{ script.name }}</textarea>
+              <textarea class="form-control" name="{{ script.id }}.name" rows="2" disabled>{{ script.name }}</textarea>
             </td>
             <td>
-              <input type="text" class="form-control" name="script_file" value="{{ script.script_file }}" disabled/>
+              <input type="text" class="form-control" name="{{ script.id }}.script_file" value="{{ script.script_file }}" disabled/>
             </td>
             <td>
-              <input type="text" class="form-control" name="args" value="{% if script.args != None %}{{ script.args }}{% endif %}" disabled/>
+              <input type="text" class="form-control" name="{{ script.id }}.args" value="{% if script.args != None %}{{ script.args }}{% endif %}" disabled/>
             </td>
             <td>
-              <input type="number" class="form-control" name="interval" value="{{ script.minute_interval }}" required/>
+              <input type="number" class="form-control" name="{{ script.id }}.minute_interval" value="{{ script.minute_interval }}" required/>
             </td>
             <td>
               <label>
-                <input type="checkbox" name="enabled" {% if script.enabled %}checked{% endif %} {% if script.required %}disabled/><br/>(Required){% else %}/>{% endif %}
+                <input type="checkbox" name="{{ script.id }}.enabled" {% if script.enabled %}checked{% endif %} {% if script.required %}disabled/><br/>(Required){% else %}/>{% endif %}
               </label>
             </td>
           </tr>
@@ -95,7 +118,8 @@
     </div>
   </div>
   <br/>
-  <button type="submit" class="btn btn-lg btn-default" name="save">Save configuration</button>
+  <button type="submit" class="btn btn-lg btn-default" name="action" value="save">Save configuration</button>
+  <button type="submit" class="btn btn-lg btn-default" name="action" value="save_as_default">Save configuration as default</button>
 </form>
 
 {% endblock %}

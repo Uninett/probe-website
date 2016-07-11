@@ -37,13 +37,20 @@ class Script(Base):
     args = Column(String(200))
     minute_interval = Column(Integer)
     enabled = Column(Boolean)
+    required = Column(Boolean)
 
     probe_id = Column(Integer, ForeignKey('probes.id'))
     probe = relationship('Probe', back_populates='scripts')
 
-    def __init__(self, description, filename, args, minute_interval, enabled):
+    def __init__(self, description, filename, args, minute_interval, enabled, required=False):
         self.description = description
         self.filename = filename
         self.args = args
         self.minute_interval = minute_interval
         self.enabled = enabled
+        self.required = required
+        
+    def __repr__(self):
+        return ('id={},description={},filename={},args={},minute_interval={},enabled={},required={},'
+                'probe_id={}'.format(self.id, self.description, self.filename, self.args,
+                                     self.minute_interval, self.enabled, self.required, self.probe_id))
