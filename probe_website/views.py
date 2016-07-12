@@ -66,7 +66,7 @@ def probes():
                                            {'host_script_configs': database.get_script_data(probe)},
                                            'script_configs')
                 ansible.export_host_config(probe.custom_id,
-                                           {'host_network_configs': database.get_script_data(probe)},
+                                           {'host_network_configs': database.get_network_config_data(probe)},
                                            'network_configs')
 
     probes = database.get_all_probes_data('nouser')
