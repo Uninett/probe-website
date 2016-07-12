@@ -4,6 +4,7 @@ from probe_website.database import Database
 from probe_website import util, settings
 from probe_website import ansible_interface as ansible
 from probe_website.database import Probe
+from subprocess import Popen
 
 database = Database(settings.DATABASE_PATH)
 
@@ -55,6 +56,7 @@ def probes():
             message_for_user += error_message
         elif action == 'remove_probe':
             probe_id = request.form.get('probe_id', '')
+            ansible.remove_script_config(probe_id)
             database.remove_probe(probe_id)
             database.save_changes()
         elif action == 'push_config':

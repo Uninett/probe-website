@@ -59,6 +59,9 @@ class Database():
             required = False
             if 'required' in script:
                 required = script['required']
+                # required implies enabled
+                if required:
+                    script['enabled'] = True
 
             self.add_script(probe, script['name'], script['script_file'],
                             script['args'], script['minute_interval'],
@@ -133,6 +136,10 @@ class Database():
             pass
         else:
             script.enabled = bool(enabled)
+
+        # required implies enabled
+        if script.required:
+            script.enabled = True
 
         return True
 
