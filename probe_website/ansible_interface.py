@@ -11,44 +11,46 @@ import shutil
 # b) Save this config in the host_groups directory
 # c) Run ansible-playbook with all the (user's) probes
 
-def load_default_script_configs(username):
-    filename = '{}/group_vars/{}/script_configs'.format(settings.ANSIBLE_PATH, username)
+def load_default_config(username, config_name):
+    filename = '{}/group_vars/{}/{}'.format(settings.ANSIBLE_PATH, username, config_name)
     # Change to global default if there is no group default
     if not os.path.isfile(filename):
-        filename = '{}/group_vars/{}/script_configs'.format(settings.ANSIBLE_PATH, 'all')
+        filename = '{}/group_vars/{}/{}'.format(settings.ANSIBLE_PATH, 'all', config_name)
+        if not os.path.isfile(filename):
+            # There is no default config with that name
+            return ''
 
     with open(filename, 'r') as f:
         # Should probably check for malformed config file here
-        return yaml.safe_load(f)['default_script_configs']
+        return yaml.safe_load(f)
 
 
 # Data is a normal python data structure consisting of lists & dicts
-def export_script_config_as_default(username, script_data):
+def export_group_config(username, data, filename):
     dir_path = '{}/group_vars/{}/'.format(settings.ANSIBLE_PATH, username)
-    _write_script_config(dir_path, script_data, 'default_script_configs')
+    _write_config(dir_path, data, filename)
 
 
-def export_script_config(probe_id, script_data):
+def export_host_config(probe_id, data, filename):
     probe_id = util.convert_mac(probe_id, mode='storage')
     dir_path = '{}/host_vars/{}/'.format(settings.ANSIBLE_PATH, probe_id)
-    _write_script_config(dir_path, script_data, 'host_script_configs')
+    _write_config(dir_path, data, filename)
 
 
-def remove_script_config(probe_id):
+def remove_host_config(probe_id):
     probe_id = util.convert_mac(probe_id, mode='storage')
     dir_path = '{}/host_vars/{}/'.format(settings.ANSIBLE_PATH, probe_id)
-    shutil.rmtree(dir_path)
+    if os.path.isdir(dir_path):
+        shutil.rmtree(dir_path)
 
 
-def _write_script_config(dir_path, script_data, entry_name):
+def _write_config(dir_path, data, filename):
     if not os.path.exists(dir_path):
         makedirs(dir_path)
 
-    script_data = {entry_name: script_data}
-
-    with open(dir_path + 'script_configs', 'w') as f:
+    with open(dir_path + filename, 'w') as f:
         f.write('---\n')
-        f.write(yaml.dump(script_data))
+        f.write(yaml.dump(data))
 
 
 def update_hosts_file():

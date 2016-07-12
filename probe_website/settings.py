@@ -7,5 +7,8 @@ ERROR_MESSAGE = {
         ),
         'invalid_scripts': (
             'One or more of the script configurations are invalid.'
+        ),
+        'invalid_network_config': (
+            'One or more of the network configurations are invalid.'
         )
 }

@@ -22,101 +22,119 @@
     <div class="form-group">
       <label class="col-sm-2 control-label">{{ entry.description }}</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="{{ entry.name }}" value="{{ entry.value }}" {% if entry.name == 'probe_id' %}pattern="(([0-9a-fA-F]:?){2}){5}[0-9a-fA-F]{2}"{% endif %} required/>
+        <input type="text" class="form-control" name="{{ entry.key }}" value="{{ entry.value }}" {% if entry.key == 'probe_id' %}pattern="(([0-9a-fA-F]:?){2}){5}[0-9a-fA-F]{2}"{% endif %} required/>
       </div>
     </div>
     {% endfor %}
-
-<!--     <1!-- ID selection --1> -->
-<!--     <div class="form-group"> -->
-<!--       <label class="col-sm-2 control-label">Probe ID</label> -->
-<!--       <div class="col-sm-10"> -->
-<!--         <div class="radio" align="left"> -->
-<!--           <label> -->
-<!--             <input type="radio" name="probe_id" value="mac_id" checked> -->
-<!--             Use MAC address as ID -->
-<!--           </label> -->
-<!--         </div> -->
-<!--         <div class="radio" align="left"> -->
-<!--           <label> -->
-<!--             <input type="radio" name="probe_id" value="custom_id"/> -->
-<!--             <input type="text" class="form-control" name="custom_id"/> -->
-<!--           </label> -->
-<!--         </div> -->
-<!--       </div> -->
-<!--     </div> -->
 
   </div>
   <br/>
 
   <button type="submit" class="btn btn-lg btn-default" name="action" value="save">Save configuration</button>
 
-  <h2>Configuration for test scripts</h2>
+  <h2>Configuration for test scripts, network and databases</h2>
 
-  <!-- <1!-- Choose default or custom config --1> -->
-  <!-- <table class="table table-bordered table-striped"> -->
-  <!--   <tr> -->
-  <!--     <td> -->
-  <!--       <div class="radio"> -->
-  <!--         <label> -->
-  <!--           <input type="radio" name="config_type" value="default" id="default_config"  checked> -->
-  <!--           Use <b>default</b> configuration -->
-  <!--         </label> -->
-  <!--       </div> -->
-  <!--     </td> -->
-  <!--     <td> -->
-  <!--       <div class="radio"> -->
-  <!--         <label> -->
-  <!--           <input type="radio" name="config_type" value="default"> -->
-  <!--           Use <b>custom</b> configuration -->
-  <!--         </label> -->
-  <!--       </div> -->
-  <!--     </td> -->
-  <!--   </tr> -->
-  <!-- </table> -->
+  <div id="extra_configs">
+    <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
+      <li class="active"><a href="#scripts" data-toggle="tab" onclick="return false">Test scripts</a></li>
+      <li><a href="#network" data-toggle="tab" onclick="return false">Network</a></li>
+      <!-- <li><a href="#databases" data-toggle="tab" onclick="return false">Databases</a></li> -->
+    </ul>
+    <div id="tab_content" class="tab-content">
 
-  <!-- Script configurations -->
-  <div class="row">
-    <div class="col-md-12">
-      <table class="table table-bordered">
-        <thead>
-          <tr>
-            <th>Description</th>
-            <th>Script filename</th>
-            <th>Arguments</th>
-            <th>Minute interval</th>
-            <th>Enabled</th>
-          </tr>
-        </thead>
+      <!-- Script configurations -->
+      <div id="scripts" class="tab-pane active">
+        <div class="row">
+          <div class="col-md-12">
+            <table class="table table-bordered">
+              <thead>
+                <tr>
+                  <th>Description</th>
+                  <th>Script filename</th>
+                  <th>Arguments</th>
+                  <th>Minute interval</th>
+                  <th>Enabled</th>
+                </tr>
+              </thead>
 
-        <tbody>
+              <tbody>
 
-        {% for script in scripts %}
-          <tr>
-            <td>
-              <textarea class="form-control" name="{{ script.id }}.name" rows="2" disabled>{{ script.name }}</textarea>
-            </td>
-            <td>
-              <input type="text" class="form-control" name="{{ script.id }}.script_file" value="{{ script.script_file }}" disabled/>
-            </td>
-            <td>
-              <input type="text" class="form-control" name="{{ script.id }}.args" value="{% if script.args != None %}{{ script.args }}{% endif %}" disabled/>
-            </td>
-            <td>
-              <input type="number" class="form-control" name="{{ script.id }}.minute_interval" value="{{ script.minute_interval }}" required/>
-            </td>
-            <td>
-              <label>
-                <input type="checkbox" name="{{ script.id }}.enabled" {% if script.enabled %}checked{% endif %} {% if script.required %}disabled/><br/>(Required){% else %}/>{% endif %}
-              </label>
-            </td>
-          </tr>
-        {% endfor %}
+              {% for script in scripts %}
+                <tr>
+                  <td>
+                    <textarea class="form-control" name="script.{{ script.id }}.name" rows="2" disabled>{{ script.name }}</textarea>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control" name="script.{{ script.id }}.script_file" value="{{ script.script_file }}" disabled/>
+                  </td>
+                  <td>
+                    <input type="text" class="form-control" name="script.{{ script.id }}.args" value="{% if script.args != None %}{{ script.args }}{% endif %}" disabled/>
+                  </td>
+                  <td>
+                    <input type="number" class="form-control" name="script.{{ script.id }}.minute_interval" value="{{ script.minute_interval }}" required/>
+                  </td>
+                  <td>
+                    <label>
+                      <input type="checkbox" name="script.{{ script.id }}.enabled" {% if script.enabled %}checked{% endif %} {% if script.required %}disabled/><br/>(Required){% else %}/>{% endif %}
+                    </label>
+                  </td>
+                </tr>
+              {% endfor %}
 
-        </tbody>
-      </table>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Network configuration -->
+      <div id="network" class="tab-pane">
+        <div class="form-horizontal">
+
+          {% for config in network_configs %}
+          <h4><br/>{{ config.description }}</h4>
+
+          <div class="form-group">
+            <label class="col-sm-2 control-label">SSID</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="network.{{ config.id }}.ssid" value="{{ config.ssid }}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Anonymous ID</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="network.{{ config.id }}.anonymous_id" value="{{ config.anonymous_id }}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Username / User ID</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="network.{{ config.id }}.username" value="{{ config.username }}">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Password</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="network.{{ config.id }}.password" value="{{ config.password }}">
+            </div>
+          </div>
+          {% endfor %}
+
+        </div>
+      </div>
+
+      <!-- <1!-- Database configuration --1> -->
+      <!-- <div id="databases" class="tab-pane"> -->
+      <!-- </div> -->
     </div>
   </div>
+
+  <script type="text/javascript">
+      jQuery(document).ready(function ($) {
+          $('#tabs').tab();
+      });
+  </script>
+
   <br/>
   <button type="submit" class="btn btn-lg btn-default" name="action" value="save">Save configuration</button>
   <button type="submit" class="btn btn-lg btn-default" name="action" value="save_as_default">Save configuration as default</button>

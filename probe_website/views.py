@@ -1,12 +1,12 @@
 from probe_website import app
 from flask import render_template, request, abort, redirect, url_for
-from probe_website.database import Database
+import probe_website.database
 from probe_website import util, settings
 from probe_website import ansible_interface as ansible
 from probe_website.database import Probe
 from subprocess import Popen
 
-database = Database(settings.DATABASE_PATH)
+database = probe_website.database.Database(settings.DATABASE_PATH)
 
 USERNAME = 'test'
 
@@ -56,12 +56,18 @@ def probes():
             message_for_user += error_message
         elif action == 'remove_probe':
             probe_id = request.form.get('probe_id', '')
-            ansible.remove_script_config(probe_id)
             database.remove_probe(probe_id)
+            ansible.remove_host_config(probe_id)
             database.save_changes()
         elif action == 'push_config':
+            # Export the script configs in the sql database to ansible readable configs
             for probe in database.session.query(Probe).all():
-                ansible.export_script_config(probe.custom_id, database.get_script_data(probe))
+                ansible.export_host_config(probe.custom_id,
+                                           {'host_script_configs': database.get_script_data(probe)},
+                                           'script_configs')
+                ansible.export_host_config(probe.custom_id,
+                                           {'host_network_configs': database.get_script_data(probe)},
+                                           'network_configs')
 
     probes = database.get_all_probes_data('nouser')
     return render_template('probes.html', probes=probes, message=message_for_user)
@@ -74,27 +80,35 @@ def probe_setup():
     if probe_id == '':
         print('No probe ID specified')
         abort(404)
-    
+
     probe = database.get_probe(probe_id)
 
     if request.method == 'POST':
         successful_script_update = update_scripts()
+        successful_network_update = update_network_configs()
         successful_probe_update = update_probe(probe_id)
 
-        if successful_script_update and successful_probe_update:
+        if successful_script_update and successful_probe_update and successful_network_update:
             database.save_changes()
 
             action = request.form.get('action', '')
             if action == 'save_as_default':
-                ansible.export_script_config_as_default(USERNAME, database.get_script_data(probe))
+                ansible.export_group_config(USERNAME,
+                                            {'group_script_configs': database.get_script_data(probe)},
+                                            'script_configs')
+                ansible.export_group_config(USERNAME,
+                                            {'group_network_configs': database.get_network_config_data(probe)},
+                                            'network_configs')
 
             return redirect(url_for('probes'))
         else:
             database.revert_changes()
             if not successful_script_update:
-                message_for_user = settings.ERROR_MESSAGE['invalid_scripts']
+                message_for_user += settings.ERROR_MESSAGE['invalid_scripts']
             if not successful_probe_update:
-                message_for_user = settings.ERROR_MESSAGE['invalid_mac']
+                message_for_user += settings.ERROR_MESSAGE['invalid_mac']
+            if not successful_network_update:
+                message_for_user += settings.ERROR_MESSAGE['invalid_network_config']
 
     return generate_probe_setup_template(probe_id, message_for_user)
 
@@ -107,7 +121,7 @@ def probe_setup():
 
 def update_scripts():
     probe_id = request.args.get('id', '')
-    script_configs = util.parse_script_configs(request.form.items())
+    script_configs = util.parse_configs(request.form.items(), 'script')
     blank_config = {
             'name': None,
             'script_file': None,
@@ -129,6 +143,29 @@ def update_scripts():
 
     return successful
 
+def update_network_configs():
+    probe_id = request.args.get('id', '')
+    network_configs = util.parse_configs(request.form.items(), 'network')
+    blank_config = {
+            'ssid': None,
+            'anonymous_id': None,
+            'username': None,
+            'password': None,
+    }
+
+    probe = database.get_probe(probe_id)
+    successful = True
+    for config_id, config in network_configs.items():
+        # Merge the two dicts
+        m_dict = blank_config.copy()
+        m_dict.update(config)
+        success = database.update_network_config(probe, config_id, m_dict['ssid'], m_dict['anonymous_id'],
+                                                 m_dict['username'], m_dict['password'])
+        if not success:
+            successful = False
+
+    return successful
+    
 
 def update_probe(probe_id):
     new_name = request.form.get('probe_name', '')
@@ -144,17 +181,18 @@ def update_probe(probe_id):
 def generate_probe_setup_template(probe_id, message_for_user):
     probe_data = database.get_probe_data(probe_id)
     required_entries = [
-            {'name': 'probe_name', 'description': 'Probe name', 'value': probe_data['name']},
-            {'name': 'probe_id', 'description': 'wlan0 MAC address', 'value': probe_data['id']},
-            {'name': 'probe_location', 'description': 'Probe location', 'value': probe_data['location']},
-            {'name': 'contact_person', 'description': 'Contact person (name)', 'value': probe_data['contact_person']},
+            {'key': 'probe_name', 'description': 'Probe name', 'value': probe_data['name']},
+            {'key': 'probe_id', 'description': 'wlan0 MAC address', 'value': probe_data['id']},
+            {'key': 'probe_location', 'description': 'Probe location', 'value': probe_data['location']},
+            {'key': 'contact_person', 'description': 'Contact person (name)', 'value': probe_data['contact_person']},
             {'name': 'contact_email', 'description': 'Contact email', 'value': probe_data['contact_email']},
     ]
 
     return render_template('probe_setup.html',
                            message=message_for_user,
                            required=required_entries,
-                           scripts=probe_data['scripts'])
+                           scripts=probe_data['scripts'],
+                           network_configs=probe_data['network_configs'])
 
 def new_probe():
     message_for_user = ''

@@ -7,11 +7,11 @@ from probe_website.database import Base
 class Probe(Base):
     __tablename__ = 'probes'
     id = Column(Integer, primary_key=True)
-    name = Column(String(128))
-    custom_id = Column(String(64))
-    location = Column(String(128))
-    contact_person = Column(String(128))
-    contact_email = Column(String(128))
+    name = Column(String(256))
+    custom_id = Column(String(256))
+    location = Column(String(256))
+    contact_person = Column(String(256))
+    contact_email = Column(String(256))
 
     def __init__(self, name=None, custom_id=None, location=None,
                  contact_person=None, contact_email=None):
@@ -32,9 +32,9 @@ class Probe(Base):
 class Script(Base):
     __tablename__ = 'scripts'
     id = Column(Integer, primary_key=True)
-    description = Column(String(200))
-    filename = Column(String(64))
-    args = Column(String(200))
+    description = Column(String(256))
+    filename = Column(String(256))
+    args = Column(String(256))
     minute_interval = Column(Integer)
     enabled = Column(Boolean)
     required = Column(Boolean)
@@ -54,3 +54,38 @@ class Script(Base):
         return ('id={},description={},filename={},args={},minute_interval={},enabled={},required={},'
                 'probe_id={}'.format(self.id, self.description, self.filename, self.args,
                                      self.minute_interval, self.enabled, self.required, self.probe_id))
+
+class NetworkConfig(Base):
+    __tablename__ = 'network_configs'
+    id = Column(Integer, primary_key=True)
+    name = Column(String(256))
+    ssid = Column(String(64))
+    anonymous_id = Column(String(256))
+    username = Column(String(256))
+    password = Column(String(256))
+
+    probe_id = Column(Integer, ForeignKey('probes.id'))
+    probe = relationship('Probe', back_populates='network_configs')
+
+    def __init__(self, name, ssid, anonymous_id, username, password):
+        self.name = name
+        self.ssid = ssid
+        self.anonymous_id = anonymous_id
+        self.username = username
+        self.password = password
+        
+    def __repr__(self):
+        return ('id={},name={},ssid={},anonymous_id={},username={}'.format(self.id,
+                self.name, self.ssid, self.anonymousd_id, self.username))
+
+# class Database(Base):
+#     _tablename__ = 'databases'
+#     id = Column(Integer, primary_key=True)
+#     description = Column(String(256))
+#     name = Column(String(256))
+#     address = Column(String(256))
+#     username = Column(String(256))
+#     password = Column(String(256))
+
+#     probe_id = Column(Integer, ForeignKey('probes.id'))
+#     probe = relationship('Probe', back_populates='scripts')

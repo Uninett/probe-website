@@ -19,24 +19,30 @@ def convert_mac(mac, mode):
         return ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)]).upper()
 
 
-# The raw config is in the format ImmutableMultiDict([('6.enabled', 'on'), ('7.interval', '10'), ... ])
-# where each element is (<script_id>.attribute, value). The list will also
-# include configs not for scripts, so ignore those.
+# The raw config is in the format ImmutableMultiDict([('script.6.enabled', 'on'),
+# ('script.7.interval', '10'), ... ]) etc.
+# where each element is (<type>.<id>.attribute, value). The list will also
+# include configs not in this format, so ignore those.
 # This function converts it to this format: {id1: {'name': 'name', ..}, id2: { ... }, ... } i.e.
-# groups values for each script together
-def parse_script_configs(configs):
+# groups values for each id together
+# configs contains all the config data, while config_type is the
+# content we want to extract
+def parse_configs(configs, config_type):
     parsed = {}
     for tup in configs:
         try:
-            script_id, attribute = tup[0].split('.')
-            script_id = int(script_id)
+            val_type, val_id, attribute = tup[0].split('.')
+            val_id = int(val_id)
         except ValueError:
-            # Probably not a script attribute, so ignore it
+            # Probably an entry in another format, so ignore it
+            continue
+
+        if val_type != config_type:
             continue
 
         value = tup[1]
 
-        parsed.setdefault(script_id, {})
-        parsed[script_id].setdefault(attribute, value)
+        parsed.setdefault(val_id, {})
+        parsed[val_id].setdefault(attribute, value)
 
     return parsed
