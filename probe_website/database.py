@@ -5,14 +5,14 @@ from re import fullmatch
 from probe_website import util, settings
 from probe_website import ansible_interface as ansible
 
-# The models module depends on this, so that's why it's global
+# The models module depend on this, so that's why it's global
 Base = declarative_base()
 
 # This must be imported AFTER Base has been instantiated!
-from probe_website.models import Probe, Script, NetworkConfig
+from probe_website.models import Probe, Script, NetworkConfig, Database, User
 
 
-class Database():
+class DatabaseManager():
     def __init__(self, database_path):
         self.engine = create_engine('sqlite:///' + database_path, convert_unicode=True)
         self.session = scoped_session(sessionmaker(autocommit=False,
@@ -21,7 +21,15 @@ class Database():
 
         global Base
         Base.query = self.session.query_property()
+        
+        self.setup_relationships()
 
+        Base.metadata.create_all(self.engine)
+
+        if len(self.session.query(User).all()) == 0:
+            self.add_user('testuser', 'testpass')
+
+    def setup_relationships(self):
         Probe.scripts = relationship('Script',
                                      order_by=Script.id,
                                      back_populates='probe',
@@ -32,10 +40,24 @@ class Database():
                                              back_populates='probe',
                                              cascade='all, delete, delete-orphan')
 
-        Base.metadata.create_all(self.engine)
+        User.probes = relationship('Probe',
+                                   order_by=Probe.id,
+                                   back_populates='user',
+                                   cascade='all, delete, delete-orphan')
+
+        User.databases = relationship('Database',
+                                      order_by=Database.id,
+                                      back_populates='user',
+                                      cascade='all, delete, delete-orphan')
 
     def shutdown_session(self):
         self.session.remove()
+
+    def add_user(self, username, password):
+        user = User(username, password)
+        self.add_default_databases(user)
+        self.session.add(user)
+        self.save_changes()
 
     def add_probe(self, username, probe_name, custom_id, location=None, contact_person=None, contact_email=None, scripts=None, network_configs=None):
         ''' 
@@ -66,6 +88,14 @@ class Database():
         config = NetworkConfig(name, ssid, anonymous_id, username, password)
         probe.network_configs.append(config)
 
+    def add_database(self, user, name, db_type, address, port, username, password):
+        # Need to take user into account here
+        db = Database(name, db_type, address, port, username, password)
+        user.databases.append(db)
+
+    def add_default_databases(self, user):
+        self.add_database(user, 'influxdb', 'influxdb', '', '', '', '')
+
     def load_default_scripts(self, probe, username):
         configs = ansible.load_default_config(username, 'script_configs')
         if 'default_script_configs' in configs:
@@ -91,20 +121,9 @@ class Database():
     def load_default_network_configs(self, probe, username):
         configs = ansible.load_default_config(username, 'network_configs')
 
-        print(configs)
-        # for name in ['any', 'two_g', 'five_g']:
-        #     if 'network' in configs and name in configs['network']:
-        #         self.add_network_config(probe, name,
-        #                                 configs['network'][name]['ssid'],
-        #                                 configs['network'][name]['anonymous_id'],
-        #                                 configs['network'][name]['username'],
-        #                                 configs['network'][name]['password'])
-        #     else:
-        #         self.add_network_config(probe, name, '', '', '', '')
-
         if 'group_network_configs' in configs:
-            for config in configs['group_network_configs']:
-                self.add_network_config(probe, config['name'], config['ssid'],
+            for freq, config in configs['group_network_configs'].items():
+                self.add_network_config(probe, freq, config['ssid'],
                                         config['anonymous_id'], config['username'], config['password'])
         else:
             self.add_network_config(probe, 'two_g', '', '', '', '')
@@ -207,6 +226,27 @@ class Database():
             
         return True
 
+    def update_database(self, user, db_id, db_name=None, address=None, port=None, username=None, password=None):
+        if user is None:
+            return False
+
+        db = self.get_database(user, db_id)
+        if db is None:
+            return False
+
+        if self.is_valid_string(db_name):
+            db.db_name = db_name
+        if self.is_valid_string(address):
+            db.address = address
+        if self.is_valid_string(port):
+            db.port = port
+        if self.is_valid_string(username):
+            db.username = username
+        if self.is_valid_string(password):
+            db.password = password
+
+        return True
+
     # This method should only return probes associated with the specified
     # username, but atm support for different users aren't implemented, so
     # just return everything
@@ -255,37 +295,64 @@ class Database():
         return scripts
 
     def get_network_config_data(self, probe):
-        configs = []
+        configs = {'two_g': '', 'five_g': '', 'any': ''}
         for config in probe.network_configs:
-            data_entry = {
-                    'name': config.name,
-                    'ssid': config.ssid,
-                    'anonymous_id': config.anonymous_id,
-                    'username': config.username,
-                    'password': config.password,
-                    'id': config.id,
-                    'description': config.name
-            }
-            descriptions = {
-                    'two_g': '2.4 GHz',
-                    'five_g': '5 GHz',
-                    'any': "Any (will use both 2.4 GHz and 5 GHz)"
-            }
-            if data_entry['name'] in descriptions:
-                data_entry['description'] = descriptions[data_entry['name']]
+            if config.name in configs:
+                configs[config.name] = {
+                        'ssid': config.ssid,
+                        'anonymous_id': config.anonymous_id,
+                        'username': config.username,
+                        'password': config.password,
+                        'id': config.id,
+                        'description': config.name
+                }
+                descriptions = {
+                        'two_g': '2.4 GHz',
+                        'five_g': '5 GHz',
+                        'any': 'Any (will use both 2.4 GHz and 5 GHz)'
+                }
+                if config.name in descriptions:
+                    configs[config.name]['description'] = descriptions[config.name]
 
-            configs.append(data_entry)
         return configs
+
+    def get_database_info(self, user):
+        if type(user) is str:
+            user = self.get_user(user)
+            if user is None:
+                print('Invalid username')
+                return
+
+        databases = self.session.query(Database).filter(Database.user_id == user.id)
+
+        configs = {db.db_type: '' for db in databases}
+        for database in databases:
+            configs[database.db_type] = {
+                    'db_name': database.db_name,
+                    'db_type': database.db_type,
+                    'address': database.address,
+                    'port': database.port,
+                    'username': database.username,
+                    'password': database.password,
+                    'id': database.id
+            }
+        return configs
+
+    def get_user(self, username):
+        return self.session.query(User).filter(User.username == username).first()
 
     def get_probe(self, probe_id):
         probe_id = util.convert_mac(probe_id, mode='storage')
         return self.session.query(Probe).filter(Probe.custom_id == probe_id).first()
 
     def get_script(self, probe, script_id):
-        return self.session.query(Script).filter(Script.id == script_id).first()
+        return self.session.query(Script).filter(Script.probe_id == probe.id, Script.id == script_id).first()
 
     def get_network_config(self, probe, config_id):
-        return self.session.query(NetworkConfig).filter(NetworkConfig.id == config_id).first()
+        return self.session.query(NetworkConfig).filter(NetworkConfig.probe_id == probe.id, NetworkConfig.id == config_id).first()
+
+    def get_database(self, user, db_id):
+        return self.session.query(Database).filter(Database.user_id == user.id, Database.id == db_id).first()
 
     def remove_probe(self, probe_custom_id):
         probe = self.get_probe(probe_custom_id)

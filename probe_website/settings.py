@@ -10,5 +10,8 @@ ERROR_MESSAGE = {
         ),
         'invalid_network_config': (
             'One or more of the network configurations are invalid.'
+        ),
+        'invalid_database_settings': (
+            'One or more of the network configurations are invalid.'
         )
 }

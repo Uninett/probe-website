@@ -34,12 +34,12 @@
             <li {% if request.url_rule.endpoint == "download_image" %}class="active"{% endif %}>
               <a href="{{ url_for('download_image') }}">Download image</a>
             </li>
+            <li {% if request.url_rule.endpoint == "databases" %}class="active"{% endif %}>
+              <a href="{{ url_for('databases') }}">Databases</a>
+            </li>
             <li {% if request.url_rule.endpoint == "probes" %}class="active"{% endif %}>
               <a href="{{ url_for('probes') }}">Probes</a>
             </li>
-            <!-- <li {% if request.url_rule.endpoint == "probe_setup" %}class="active"{% endif %}> -->
-            <!--   <a href="{{ url_for('probe_setup') }}">Probe setup</a> -->
-            <!-- </li> -->
 
           </ul>
         </div><!--/.nav-collapse -->

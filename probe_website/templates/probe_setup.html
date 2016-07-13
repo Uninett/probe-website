@@ -13,37 +13,37 @@
 {% endif %}
 
 <form method="POST">
-  <h2>Basic info</h2>
-  <p>This information makes it easier to identify individual probes and to contact you if something happens.</p><br/>
-  <div class="form-horizontal">
-
-    <!-- Basic entries -->
-    {% for entry in required %}
-    <div class="form-group">
-      <label class="col-sm-2 control-label">{{ entry.description }}</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" name="{{ entry.key }}" value="{{ entry.value }}" {% if entry.key == 'probe_id' %}pattern="(([0-9a-fA-F]:?){2}){5}[0-9a-fA-F]{2}"{% endif %} required/>
-      </div>
-    </div>
-    {% endfor %}
-
-  </div>
-  <br/>
-
-  <button type="submit" class="btn btn-lg btn-default" name="action" value="save">Save configuration</button>
-
-  <h2>Configuration for test scripts, network and databases</h2>
-
   <div id="extra_configs">
     <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-      <li class="active"><a href="#scripts" data-toggle="tab" onclick="return false">Test scripts</a></li>
-      <li><a href="#network" data-toggle="tab" onclick="return false">Network</a></li>
-      <!-- <li><a href="#databases" data-toggle="tab" onclick="return false">Databases</a></li> -->
+      <li class="active"><a href="#basic" data-toggle="tab">Basic info</a></li>
+      <li><a href="#scripts" data-toggle="tab">Test scripts</a></li>
+      <li><a href="#network" data-toggle="tab">Network</a></li>
     </ul>
     <div id="tab_content" class="tab-content">
 
+      <!-- Basic info -->
+      <div id="basic" class="tab-pane active">
+        <h2>Basic info</h2>
+        <p>This information makes it easier to identify individual probes and to contact you if something happens.</p><br/>
+        <div class="form-horizontal">
+
+          <!-- Basic entries -->
+          {% for entry in required %}
+          <div class="form-group">
+            <label class="col-sm-2 control-label">{{ entry.description }}</label>
+            <div class="col-sm-10">
+              <input type="text" class="form-control" name="{{ entry.key }}" value="{{ entry.value }}" {% if entry.key == 'probe_id' %}pattern="(([0-9a-fA-F]:?){2}){5}[0-9a-fA-F]{2}"{% endif %} required/>
+            </div>
+          </div>
+          {% endfor %}
+
+        </div>
+      </div>
+
       <!-- Script configurations -->
-      <div id="scripts" class="tab-pane active">
+      <div id="scripts" class="tab-pane">
+        <h2>Test script configuration</h2>
+        <p>Here you can adjust some test script parameters if desired.</p><br/>
         <div class="row">
           <div class="col-md-12">
             <table class="table table-bordered">
@@ -89,9 +89,13 @@
 
       <!-- Network configuration -->
       <div id="network" class="tab-pane">
+        <h2>Network configuration</h2>
+        <p>Fill out information and credentials of the network(s) the probe should be connected to when doing measurements.</p><br/>
         <div class="form-horizontal">
 
-          {% for config in network_configs %}
+          {% for freq, config in network_configs.items() %}
+            {% if freq == 'any' %}
+            <!-- REMOVE THIS ^^^ IF to enable exclusive 2.4 GHz and 5 GHz as options -->
           <h4><br/>{{ config.description }}</h4>
 
           <div class="form-group">
@@ -118,14 +122,17 @@
               <input type="text" class="form-control" name="network.{{ config.id }}.password" value="{{ config.password }}">
             </div>
           </div>
+          <div class="form-group">
+            <label class="col-sm-2 control-label">Certificate</label>
+            <div class="col-sm-10">
+              <input type="file" name="network.{{ config.id }}.certificate" enctype="multipart/form-data">
+            </div>
+          </div>
+            {% endif %}
           {% endfor %}
 
         </div>
       </div>
-
-      <!-- <1!-- Database configuration --1> -->
-      <!-- <div id="databases" class="tab-pane"> -->
-      <!-- </div> -->
     </div>
   </div>
 

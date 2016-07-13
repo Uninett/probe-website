@@ -6,9 +6,9 @@ from probe_website import ansible_interface as ansible
 from probe_website.database import Probe
 from subprocess import Popen
 
-database = probe_website.database.Database(settings.DATABASE_PATH)
+database = probe_website.database.DatabaseManager(settings.DATABASE_PATH)
 
-USERNAME = 'test'
+USERNAME = 'testuser'
 
 
 @app.teardown_appcontext
@@ -46,6 +46,23 @@ def download_image():
                                optional=optional_entries)
 
 
+@app.route('/databases', methods=['GET', 'POST'])
+def databases():
+    message_for_user = ''
+    if request.method == 'POST':
+        successful = update_databases(USERNAME)
+        if successful:
+            database.save_changes()
+            ansible.export_group_config(USERNAME,
+                                        {'databases': database.get_database_info(USERNAME)},
+                                        'database_configs')
+        else:
+            database.revert_changes()
+            message_for_user += settings.ERROR_MESSAGE['invalid_database_settings']
+
+    return generate_databases_template(USERNAME, message_for_user)
+
+
 @app.route('/probes', methods=['GET', 'POST'])
 def probes():
     message_for_user = ''
@@ -66,7 +83,7 @@ def probes():
                                            {'host_script_configs': database.get_script_data(probe)},
                                            'script_configs')
                 ansible.export_host_config(probe.custom_id,
-                                           {'host_network_configs': database.get_network_config_data(probe)},
+                                           {'networks': database.get_network_config_data(probe)},
                                            'network_configs')
 
     probes = database.get_all_probes_data('nouser')
@@ -97,7 +114,7 @@ def probe_setup():
                                             {'group_script_configs': database.get_script_data(probe)},
                                             'script_configs')
                 ansible.export_group_config(USERNAME,
-                                            {'group_network_configs': database.get_network_config_data(probe)},
+                                            {'networks': database.get_network_config_data(probe)},
                                             'network_configs')
 
             return redirect(url_for('probes'))
@@ -178,6 +195,21 @@ def update_probe(probe_id):
                                        new_contact_person, new_contact_email)
     return successful
 
+def update_databases(username):
+    configs = util.parse_configs(request.form.items(), 'database')
+    user = database.get_user(username)
+
+    successful = True
+    for db_id, config in configs.items():
+        success = database.update_database(user, db_id, db_name=config['db_name'], address=config['address'],
+                                           port=config['port'], username=config['username'],
+                                           password=config['password'])
+        if not success:
+            successful = False
+
+    return successful
+
+
 def generate_probe_setup_template(probe_id, message_for_user):
     probe_data = database.get_probe_data(probe_id)
     required_entries = [
@@ -193,6 +225,14 @@ def generate_probe_setup_template(probe_id, message_for_user):
                            required=required_entries,
                            scripts=probe_data['scripts'],
                            network_configs=probe_data['network_configs'])
+
+def generate_databases_template(username, message_for_user):
+    db_info = database.get_database_info(USERNAME)
+
+    return render_template('databases.html',
+                           dbs=db_info,
+                           message=message_for_user)
+
 
 def new_probe():
     message_for_user = ''

@@ -4,6 +4,17 @@ from sqlalchemy.orm import relationship
 from probe_website.database import Base
 
 
+class User(Base):
+    __tablename__ = 'users'
+    id = Column(Integer, primary_key=True)
+    username = Column(String(256))
+    password = Column(String(256))
+
+    def __init__(self, username, password):
+        self.username = username
+        self.password = password
+
+
 class Probe(Base):
     __tablename__ = 'probes'
     id = Column(Integer, primary_key=True)
@@ -12,6 +23,9 @@ class Probe(Base):
     location = Column(String(256))
     contact_person = Column(String(256))
     contact_email = Column(String(256))
+
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship('User', back_populates='probes')
 
     def __init__(self, name=None, custom_id=None, location=None,
                  contact_person=None, contact_email=None):
@@ -24,9 +38,6 @@ class Probe(Base):
     def __repr__(self):
         return 'id={},name={},custom_id={},location={},contact_person={},contact_email={}'.format(
                 self.id, self.name, self.custom_id, self.location, self.contact_person, self.contact_email)
-
-    def add_script(self, script):
-        self.scripts.append(script)
 
 
 class Script(Base):
@@ -76,16 +87,25 @@ class NetworkConfig(Base):
         
     def __repr__(self):
         return ('id={},name={},ssid={},anonymous_id={},username={}'.format(self.id,
-                self.name, self.ssid, self.anonymousd_id, self.username))
+                    self.name, self.ssid, self.anonymousd_id, self.username))
 
-# class Database(Base):
-#     _tablename__ = 'databases'
-#     id = Column(Integer, primary_key=True)
-#     description = Column(String(256))
-#     name = Column(String(256))
-#     address = Column(String(256))
-#     username = Column(String(256))
-#     password = Column(String(256))
+class Database(Base):
+    __tablename__ = 'databases'
+    id = Column(Integer, primary_key=True)
+    db_name = Column(String(256))
+    db_type = Column(String(256))
+    address = Column(String(256))
+    port = Column(String(6))
+    username = Column(String(256))
+    password = Column(String(256))
 
-#     probe_id = Column(Integer, ForeignKey('probes.id'))
-#     probe = relationship('Probe', back_populates='scripts')
+    user_id = Column(Integer, ForeignKey('users.id'))
+    user = relationship('User', back_populates='databases')
+
+    def __init__(self, db_name, db_type, address, port, username, password):
+        self.db_name = db_name
+        self.db_type = db_type
+        self.address = address
+        self.port = port
+        self.username = username
+        self.password = password
