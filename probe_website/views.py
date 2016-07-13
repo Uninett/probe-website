@@ -1,12 +1,11 @@
 from probe_website import app
 from flask import render_template, request, abort, redirect, url_for
 import probe_website.database
-from probe_website import util, settings
+from probe_website import settings, form_parsers
 from probe_website import ansible_interface as ansible
-from probe_website.database import Probe
-from subprocess import Popen
 
 database = probe_website.database.DatabaseManager(settings.DATABASE_PATH)
+form_parsers.set_database(database)
 
 USERNAME = 'testuser'
 
@@ -50,7 +49,7 @@ def download_image():
 def databases():
     message_for_user = ''
     if request.method == 'POST':
-        successful = update_databases(USERNAME)
+        successful = form_parsers.update_databases(USERNAME)
         if successful:
             database.save_changes()
             ansible.export_group_config(USERNAME,
@@ -69,7 +68,7 @@ def probes():
     if request.method == 'POST':
         action = request.form.get('action', '')
         if action == 'new_probe':
-            error_message = new_probe()
+            error_message = form_parsers.new_probe()
             message_for_user += error_message
         elif action == 'remove_probe':
             probe_id = request.form.get('probe_id', '')
@@ -78,7 +77,7 @@ def probes():
             database.save_changes()
         elif action == 'push_config':
             # Export the script configs in the sql database to ansible readable configs
-            for probe in database.session.query(Probe).all():
+            for probe in database.session.query(probe_website.database.Probe).all():
                 ansible.export_host_config(probe.custom_id,
                                            {'host_script_configs': database.get_script_data(probe)},
                                            'script_configs')
@@ -101,11 +100,15 @@ def probe_setup():
     probe = database.get_probe(probe_id)
 
     if request.method == 'POST':
-        successful_script_update = update_scripts()
-        successful_network_update = update_network_configs()
-        successful_probe_update = update_probe(probe_id)
+        successful_script_update = form_parsers.update_scripts()
+        successful_network_update = form_parsers.update_network_configs()
+        successful_certificate_upload = form_parsers.upload_certificate()
+        successful_probe_update = form_parsers.update_probe(probe_id)
 
-        if successful_script_update and successful_probe_update and successful_network_update:
+        if (successful_script_update and
+                successful_probe_update and
+                successful_network_update and
+                successful_certificate_upload):
             database.save_changes()
 
             action = request.form.get('action', '')
@@ -116,6 +119,9 @@ def probe_setup():
                 ansible.export_group_config(USERNAME,
                                             {'networks': database.get_network_config_data(probe)},
                                             'network_configs')
+                #
+                # Do something to save the uploaded certificate as default
+                #
 
             return redirect(url_for('probes'))
         else:
@@ -126,6 +132,8 @@ def probe_setup():
                 message_for_user += settings.ERROR_MESSAGE['invalid_mac']
             if not successful_network_update:
                 message_for_user += settings.ERROR_MESSAGE['invalid_network_config']
+            if not successful_certificate_upload:
+                message_for_user += settings.ERROR_MESSAGE['invalid_certificate']
 
     return generate_probe_setup_template(probe_id, message_for_user)
 
@@ -135,79 +143,6 @@ def probe_setup():
 #  Everything below should probably be moved to its own module  #
 #                                                               #
 #################################################################
-
-def update_scripts():
-    probe_id = request.args.get('id', '')
-    script_configs = util.parse_configs(request.form.items(), 'script')
-    blank_config = {
-            'name': None,
-            'script_file': None,
-            'args': None,
-            'minute_interval': None,
-            'enabled': None,
-    }
-
-    probe = database.get_probe(probe_id)
-    successful = True
-    for script_id, config in script_configs.items():
-        # Merge the two dicts
-        m_dict = blank_config.copy()
-        m_dict.update(config)
-        success = database.update_script(probe, script_id, m_dict['name'], m_dict['script_file'],
-                                         m_dict['args'], m_dict['minute_interval'], m_dict['enabled'])
-        if not success:
-            successful = False
-
-    return successful
-
-def update_network_configs():
-    probe_id = request.args.get('id', '')
-    network_configs = util.parse_configs(request.form.items(), 'network')
-    blank_config = {
-            'ssid': None,
-            'anonymous_id': None,
-            'username': None,
-            'password': None,
-    }
-
-    probe = database.get_probe(probe_id)
-    successful = True
-    for config_id, config in network_configs.items():
-        # Merge the two dicts
-        m_dict = blank_config.copy()
-        m_dict.update(config)
-        success = database.update_network_config(probe, config_id, m_dict['ssid'], m_dict['anonymous_id'],
-                                                 m_dict['username'], m_dict['password'])
-        if not success:
-            successful = False
-
-    return successful
-    
-
-def update_probe(probe_id):
-    new_name = request.form.get('probe_name', '')
-    new_probe_id = request.form.get('probe_id', '')
-    new_location = request.form.get('probe_location', '')
-    new_contact_person = request.form.get('contact_person', '')
-    new_contact_email = request.form.get('contact_email', '')
-
-    successful = database.update_probe(probe_id, new_name, new_probe_id, new_location,
-                                       new_contact_person, new_contact_email)
-    return successful
-
-def update_databases(username):
-    configs = util.parse_configs(request.form.items(), 'database')
-    user = database.get_user(username)
-
-    successful = True
-    for db_id, config in configs.items():
-        success = database.update_database(user, db_id, db_name=config['db_name'], address=config['address'],
-                                           port=config['port'], username=config['username'],
-                                           password=config['password'])
-        if not success:
-            successful = False
-
-    return successful
 
 
 def generate_probe_setup_template(probe_id, message_for_user):

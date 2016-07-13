@@ -12,7 +12,9 @@
 <br/>
 {% endif %}
 
-<form method="POST">
+<form method="POST" enctype="multipart/form-data">
+  <button type="submit" class="btn btn-lg btn-default" name="action" value="save">Save configuration</button>
+  <button type="submit" class="btn btn-lg btn-default" name="action" value="save_as_default">Save configuration as default</button>
   <div id="extra_configs">
     <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
       <li class="active"><a href="#basic" data-toggle="tab">Basic info</a></li>
@@ -95,37 +97,37 @@
 
           {% for freq, config in network_configs.items() %}
             {% if freq == 'any' %}
-            <!-- REMOVE THIS ^^^ IF to enable exclusive 2.4 GHz and 5 GHz as options -->
+            <!-- REMOVE THIS IF ^^^ to enable exclusive 2.4 GHz and 5 GHz as options -->
           <h4><br/>{{ config.description }}</h4>
 
           <div class="form-group">
             <label class="col-sm-2 control-label">SSID</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="network.{{ config.id }}.ssid" value="{{ config.ssid }}">
+              <input type="text" class="form-control" name="network.{{ config.id }}.ssid" value="{{ config.ssid }}" required>
             </div>
           </div>
           <div class="form-group">
             <label class="col-sm-2 control-label">Anonymous ID</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="network.{{ config.id }}.anonymous_id" value="{{ config.anonymous_id }}">
+              <input type="text" class="form-control" name="network.{{ config.id }}.anonymous_id" value="{{ config.anonymous_id }}" required>
             </div>
           </div>
           <div class="form-group">
             <label class="col-sm-2 control-label">Username / User ID</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="network.{{ config.id }}.username" value="{{ config.username }}">
+              <input type="text" class="form-control" name="network.{{ config.id }}.username" value="{{ config.username }}" required>
             </div>
           </div>
           <div class="form-group">
             <label class="col-sm-2 control-label">Password</label>
             <div class="col-sm-10">
-              <input type="text" class="form-control" name="network.{{ config.id }}.password" value="{{ config.password }}">
+              <input type="text" class="form-control" name="network.{{ config.id }}.password" value="{{ config.password }}" required>
             </div>
           </div>
           <div class="form-group">
             <label class="col-sm-2 control-label">Certificate</label>
             <div class="col-sm-10">
-              <input type="file" name="network.{{ config.id }}.certificate" enctype="multipart/form-data">
+              <input type="file" name="network.{{ config.id }}.certificate" required>
             </div>
           </div>
             {% endif %}
@@ -142,9 +144,6 @@
       });
   </script>
 
-  <br/>
-  <button type="submit" class="btn btn-lg btn-default" name="action" value="save">Save configuration</button>
-  <button type="submit" class="btn btn-lg btn-default" name="action" value="save_as_default">Save configuration as default</button>
 </form>
 
 {% endblock %}

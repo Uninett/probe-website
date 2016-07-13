@@ -1,5 +1,6 @@
 ANSIBLE_PATH = '/home/frestr/Ansible/wifi_probe/'
 DATABASE_PATH = '/home/frestr/Projects/probe_website/database.db'
+CERTIFICATE_DIR = '/home/frestr/Ansible/wifi_probe/certs/'
 
 ERROR_MESSAGE = {
         'invalid_mac': (
@@ -13,5 +14,8 @@ ERROR_MESSAGE = {
         ),
         'invalid_database_settings': (
             'One or more of the network configurations are invalid.'
+        ),
+        'invalid_database_settings': (
+            'The supplied certificate file is invalid, or something went wrong when uploading it.'
         )
 }
