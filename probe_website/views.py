@@ -1,7 +1,7 @@
 from probe_website import app
 from flask import render_template, request, abort, redirect, url_for
 import probe_website.database
-from probe_website import settings, form_parsers
+from probe_website import settings, form_parsers, util
 from probe_website import ansible_interface as ansible
 
 database = probe_website.database.DatabaseManager(settings.DATABASE_PATH)
@@ -68,7 +68,7 @@ def probes():
     if request.method == 'POST':
         action = request.form.get('action', '')
         if action == 'new_probe':
-            error_message = form_parsers.new_probe()
+            error_message = form_parsers.new_probe(USERNAME)
             message_for_user += error_message
         elif action == 'remove_probe':
             probe_id = request.form.get('probe_id', '')
@@ -85,7 +85,7 @@ def probes():
                                            {'networks': database.get_network_config_data(probe)},
                                            'network_configs')
 
-    probes = database.get_all_probes_data('nouser')
+    probes = database.get_all_probes_data(USERNAME)
     return render_template('probes.html', probes=probes, message=message_for_user)
 
 
@@ -97,12 +97,13 @@ def probe_setup():
         print('No probe ID specified')
         abort(404)
 
+    probe_id = util.convert_mac(probe_id, mode='storage')
     probe = database.get_probe(probe_id)
 
     if request.method == 'POST':
         successful_script_update = form_parsers.update_scripts()
         successful_network_update = form_parsers.update_network_configs()
-        successful_certificate_upload = form_parsers.upload_certificate()
+        successful_certificate_upload, cert_error = form_parsers.upload_certificate(probe_id, USERNAME)
         successful_probe_update = form_parsers.update_probe(probe_id)
 
         if (successful_script_update and
@@ -119,9 +120,8 @@ def probe_setup():
                 ansible.export_group_config(USERNAME,
                                             {'networks': database.get_network_config_data(probe)},
                                             'network_configs')
-                #
-                # Do something to save the uploaded certificate as default
-                #
+
+                ansible.make_certificate_default(probe_id, USERNAME)
 
             return redirect(url_for('probes'))
         else:
@@ -133,9 +133,12 @@ def probe_setup():
             if not successful_network_update:
                 message_for_user += settings.ERROR_MESSAGE['invalid_network_config']
             if not successful_certificate_upload:
-                message_for_user += settings.ERROR_MESSAGE['invalid_certificate']
+                if cert_error == '':
+                    message_for_user += settings.ERROR_MESSAGE['invalid_certificate']
+                else:
+                    message_for_user += cert_error
 
-    return generate_probe_setup_template(probe_id, message_for_user)
+    return generate_probe_setup_template(probe_id, USERNAME, message_for_user)
 
 
 #################################################################
@@ -145,7 +148,7 @@ def probe_setup():
 #################################################################
 
 
-def generate_probe_setup_template(probe_id, message_for_user):
+def generate_probe_setup_template(probe_id, username, message_for_user):
     probe_data = database.get_probe_data(probe_id)
     required_entries = [
             {'key': 'probe_name', 'description': 'Probe name', 'value': probe_data['name']},
@@ -155,11 +158,13 @@ def generate_probe_setup_template(probe_id, message_for_user):
             {'name': 'contact_email', 'description': 'Contact email', 'value': probe_data['contact_email']},
     ]
 
+    cert_data = ansible.get_certificate_data(USERNAME, probe_id)
     return render_template('probe_setup.html',
                            message=message_for_user,
                            required=required_entries,
                            scripts=probe_data['scripts'],
-                           network_configs=probe_data['network_configs'])
+                           network_configs=probe_data['network_configs'],
+                           cert_data=cert_data)
 
 def generate_databases_template(username, message_for_user):
     db_info = database.get_database_info(USERNAME)
@@ -167,29 +172,3 @@ def generate_databases_template(username, message_for_user):
     return render_template('databases.html',
                            dbs=db_info,
                            message=message_for_user)
-
-
-def new_probe():
-    message_for_user = ''
-
-    name = request.form.get('probe_name', '')
-    probe_id = request.form.get('probe_id', '')
-    location = request.form.get('probe_location', '')
-    contact_person = request.form.get('contact_person', '')
-    contact_email = request.form.get('contact_email', '')
-
-    new_probe = database.add_probe(username=USERNAME, probe_name=name, custom_id=probe_id, location=location,
-                                   contact_person=contact_person, contact_email=contact_email)
-    # If new_probe is None, it means there already existed a probe with that ID
-    # (Note that in this case, nothing will be added to the database)
-    if new_probe is not None:
-        database.save_changes()
-    else:
-        if not database.is_valid_id(probe_id):
-            message_for_user = settings.ERROR_MESSAGE['invalid_mac']
-        else:
-            message_for_user = (
-                'Something went wrong when processing the entry.'
-            )
-
-    return message_for_user

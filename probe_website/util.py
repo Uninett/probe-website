@@ -1,4 +1,5 @@
 from re import fullmatch
+from probe_website import settings
 
 
 def is_mac_valid(mac):
@@ -46,3 +47,8 @@ def parse_configs(configs, config_type):
         parsed[val_id].setdefault(attribute, value)
 
     return parsed
+
+
+def allowed_cert_filename(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1] in \
+            settings.ALLOWED_CERT_EXTENSIONS

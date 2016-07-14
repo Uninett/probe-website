@@ -120,6 +120,7 @@ class DatabaseManager():
 
     def load_default_network_configs(self, probe, username):
         configs = ansible.load_default_config(username, 'network_configs')
+        ansible.load_default_certificate(username, probe.custom_id)
 
         if 'group_network_configs' in configs:
             for freq, config in configs['group_network_configs'].items():
@@ -255,6 +256,8 @@ class DatabaseManager():
     # probe's script configs etc.
     def get_all_probes_data(self, username):
         all_data = []
+        user = self.get_user(username)
+        # for probe in self.session.query(Probe).filter(Probe.user_id == user.id).all():
         for probe in self.session.query(Probe).all():
             data_entry = self.get_probe_data(probe.custom_id)
 
@@ -355,6 +358,7 @@ class DatabaseManager():
         return self.session.query(Database).filter(Database.user_id == user.id, Database.id == db_id).first()
 
     def remove_probe(self, probe_custom_id):
+        ansible.remove_host_cert(probe_custom_id)
         probe = self.get_probe(probe_custom_id)
         if probe is not None:
             self.session.delete(probe)

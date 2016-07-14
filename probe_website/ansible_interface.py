@@ -1,9 +1,10 @@
-from probe_website import settings, util
+from probe_website import settings, util, app
 import yaml
 import os.path
 from os import makedirs
 from subprocess import Popen
 import shutil
+import os.path
 
 # What needs to be done:
 #
@@ -12,10 +13,10 @@ import shutil
 # c) Run ansible-playbook with all the (user's) probes
 
 def load_default_config(username, config_name):
-    filename = '{}/group_vars/{}/{}'.format(settings.ANSIBLE_PATH, username, config_name)
+    filename = os.path.join(settings.ANSIBLE_PATH, 'group_vars', username, config_name)
     # Change to global default if there is no group default
     if not os.path.isfile(filename):
-        filename = '{}/group_vars/{}/{}'.format(settings.ANSIBLE_PATH, 'all', config_name)
+        filename = os.path.join(settings.ANSIBLE_PATH, 'group_vars', 'all', config_name)
         if not os.path.isfile(filename):
             # There is no default config with that name
             return ''
@@ -27,19 +28,19 @@ def load_default_config(username, config_name):
 
 # Data is a normal python data structure consisting of lists & dicts
 def export_group_config(username, data, filename):
-    dir_path = '{}/group_vars/{}/'.format(settings.ANSIBLE_PATH, username)
+    dir_path = os.path.join(settings.ANSIBLE_PATH, 'group_vars', username)
     _write_config(dir_path, data, filename)
 
 
 def export_host_config(probe_id, data, filename):
     probe_id = util.convert_mac(probe_id, mode='storage')
-    dir_path = '{}/host_vars/{}/'.format(settings.ANSIBLE_PATH, probe_id)
+    dir_path = os.path.join(settings.ANSIBLE_PATH, 'host_vars', probe_id)
     _write_config(dir_path, data, filename)
 
 
 def remove_host_config(probe_id):
     probe_id = util.convert_mac(probe_id, mode='storage')
-    dir_path = '{}/host_vars/{}/'.format(settings.ANSIBLE_PATH, probe_id)
+    dir_path = os.path.join(settings.ANSIBLE_PATH, 'host_vars', probe_id)
     if os.path.isdir(dir_path):
         shutil.rmtree(dir_path)
 
@@ -48,9 +49,56 @@ def _write_config(dir_path, data, filename):
     if not os.path.exists(dir_path):
         makedirs(dir_path)
 
-    with open(dir_path + filename, 'w') as f:
+    with open(os.path.join(dir_path, filename), 'w') as f:
         f.write('---\n')
         f.write(yaml.dump(data))
+
+
+def make_certificate_default(probe_id, username):
+    src = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id)
+    dst = os.path.join(app.config['UPLOAD_FOLDER'], 'group_certs', username)
+
+    if os.path.exists(dst):
+        shutil.rmtree(dst)
+
+    shutil.copytree(src, dst)
+
+
+def load_default_certificate(username, probe_id):
+    src = os.path.join(app.config['UPLOAD_FOLDER'], 'group_certs', username)
+    dst = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id)
+
+    if not os.path.exists(src):
+        return
+    if os.path.exists(dst):
+        shutil.rmtree(dst)
+
+    shutil.copytree(src, dst)
+
+
+def remove_host_cert(probe_id):
+    path = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id)
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
+
+def get_certificate_data(username, probe_id):
+    data = {'any': '', 'two_g': '', 'five_g': ''}
+    src = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id)
+    if not os.path.exists(src):
+        src = os.path.join(app.config['UPLOAD_FOLDER'], 'group_certs', username)
+        if not os.path.exists(src):
+            return data
+
+    for freq in ['any', 'two_g', 'five_g']:
+        path = os.path.join(src, freq)
+        if os.path.exists(path):
+            files = os.listdir(path)
+            # There should in theory only be one file  in this directory
+            if len(files) > 0:
+                data[freq] = files[0]
+        
+    return data
 
 
 def update_hosts_file():
