@@ -1,4 +1,5 @@
 Flask==0.11.1
+Flask-Login==0.3.2
 Jinja2==2.8
 MarkupSafe==0.23
 PyYAML==3.11
@@ -6,3 +7,5 @@ SQLAlchemy==1.0.13
 Werkzeug==0.11.10
 click==6.6
 itsdangerous==0.24
+paramiko==2.0.1
+pycrypto==2.6.1
