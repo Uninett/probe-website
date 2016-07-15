@@ -27,7 +27,8 @@
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
-
+            
+            {% if current_user.is_authenticated %}
             <li {% if request.url_rule.endpoint == "index" %}class="active"{% endif %}>
               <a href="{{ url_for('index') }}">Home</a>
             </li>
@@ -41,6 +42,21 @@
               <a href="{{ url_for('probes') }}">Probes</a>
             </li>
 
+              {% if current_user.admin %}
+              <li {% if request.url_rule.endpoint == "user_managment" %}class="active"{% endif %}>
+                <a href="{{ url_for('user_managment') }}">User managment</a>
+              </li>
+              {% endif %}
+
+            <li {% if request.url_rule.endpoint == "logout" %}class="active"{% endif %}>
+            <a href="{{ url_for('logout') }}">Logout (as {{ current_user.username }})</a>
+            </li>
+            {% else %}
+            <li {% if request.url_rule.endpoint == "login" %}class="active"{% endif %}>
+              <a href="{{ url_for('login') }}">Login</a>
+            </li>
+            {% endif %}
+
           </ul>
         </div><!--/.nav-collapse -->
       </div>
@@ -50,7 +66,15 @@
 
       <div class="starter-template">
 
-          {% block body %}{% endblock %}
+        {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            {% for category, message in messages %}
+            <p {% if category == 'error' %}style="color:red;"{% endif %}>{{ message }}</p>
+            {% endfor %}
+          {% endif %}
+        {% endwith %}
+
+        {% block body %}{% endblock %}
 
       </div>
 

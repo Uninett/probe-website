@@ -1,4 +1,4 @@
-from flask import request
+from flask import request, flash
 from probe_website import util, app, settings, ansible_interface
 from werkzeug.utils import secure_filename
 import os
@@ -67,8 +67,6 @@ def update_network_configs():
 
 
 def upload_certificate(probe_id, username):
-    error = ''
-
     certs = util.parse_configs(request.files.items(), 'network')
     probe = database.get_probe(probe_id)
     data = ansible_interface.get_certificate_data(username, probe_id)
@@ -78,7 +76,7 @@ def upload_certificate(probe_id, username):
         freq = database.get_network_config(probe, net_conf_id).name
 
         if 'certificate' not in tup:
-            error += 'Certificate file part missing.'
+            flash('Certificate file part missing.', 'error')
             successful = False
             break
 
@@ -86,7 +84,7 @@ def upload_certificate(probe_id, username):
         if cert.filename == '':
             if freq in data and data[freq] != '':
                 continue
-            error += 'No certificate file selected.'
+            flash('No certificate file selected.', 'error')
             successful = False
             break
 
@@ -100,22 +98,19 @@ def upload_certificate(probe_id, username):
             os.makedirs(path)
             cert.save(os.path.join(path, filename))
         else:
-            error += 'Invalid certificate filename extension.'
+            flash('Invalid certificate filename extension.', 'error')
             successful = False
             break
 
-    return successful, error
+    return successful
 
 
 def update_probe(probe_id):
     new_name = request.form.get('probe_name', '')
     new_probe_id = request.form.get('probe_id', '')
     new_location = request.form.get('probe_location', '')
-    new_contact_person = request.form.get('contact_person', '')
-    new_contact_email = request.form.get('contact_email', '')
 
-    successful = database.update_probe(probe_id, new_name, new_probe_id, new_location,
-                                       new_contact_person, new_contact_email)
+    successful = database.update_probe(probe_id, new_name, new_probe_id, new_location)
     return successful
 
 
@@ -135,26 +130,31 @@ def update_databases(username):
 
 
 def new_probe(username):
-    error = ''
-
     name = request.form.get('probe_name', '')
     probe_id = request.form.get('probe_id', '')
     location = request.form.get('probe_location', '')
-    contact_person = request.form.get('contact_person', '')
-    contact_email = request.form.get('contact_email', '')
 
-    new_probe = database.add_probe(username=username, probe_name=name, custom_id=probe_id, location=location,
-                                   contact_person=contact_person, contact_email=contact_email)
+    new_probe = database.add_probe(username=username, probe_name=name, custom_id=probe_id, location=location)
+
     # If new_probe is None, it means there already existed a probe with that ID
     # (Note that in this case, nothing will be added to the database)
     if new_probe is not None:
         database.save_changes()
     else:
         if not database.is_valid_id(probe_id):
-            error = settings.ERROR_MESSAGE['invalid_mac']
+            flash(settings.ERROR_MESSAGE['invalid_mac'], 'error')
         else:
-            error = (
-                'Something went wrong when processing the entry.'
-            )
+            flash('Something went wrong when processing the entry.', 'error')
+        return False
 
-    return error
+    return True
+
+
+def new_user():
+    username = request.form.get('username', '')
+    password = request.form.get('password', '')
+    contact_person = request.form.get('contact_person', '')
+    contact_email = request.form.get('contact_email', '')
+
+    success = database.add_user(username, password, contact_person, contact_email)
+    return success

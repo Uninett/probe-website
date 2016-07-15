@@ -20,8 +20,6 @@
             <th>Name</th>
             <th>MAC address</th>
             <th>Location</th>
-            <th>Contact person</th>
-            <th>Contact email</th>
             <th colspan="2">Actions</th>
           </tr>
         </thead>
@@ -32,8 +30,6 @@
             <td>{{ probe.name }}</td>
             <td>{{ probe.id }}</td>
             <td>{{ probe.location }}</td>
-            <td>{{ probe.contact_person }}</td>
-            <td>{{ probe.contact_email }}</td>
             <td>
               <a href="{{ url_for('probe_setup', id=probe.id) }}">
                 <button type="button" class="btn btn-default" name="edit">Edit</button>
@@ -58,12 +54,6 @@
               </td> 
               <td>
                 <input type="text" class="form-control" name="probe_location" required>
-              </td> 
-              <td>
-                <input type="text" class="form-control" name="contact_person" required>
-              </td> 
-              <td>
-                <input type="text" class="form-control" name="contact_email" required>
               </td> 
               <td colspan="2">
                 <button type="submit" class="btn btn-lg btn-default" name="action" value="new_probe">Add new probe</button>

@@ -2,17 +2,28 @@ from sqlalchemy import Column, Integer, String, Boolean
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from probe_website.database import Base
+from flask_login import UserMixin
 
 
-class User(Base):
+class User(Base, UserMixin):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     username = Column(String(256))
     password = Column(String(256))
+    contact_person = Column(String(256))
+    contact_email = Column(String(256))
+    admin = Column(Boolean)
 
-    def __init__(self, username, password):
+    def __init__(self, username, password, contact_person, contact_email, admin=False):
         self.username = username
         self.password = password
+        self.contact_person = contact_person
+        self.contact_email = contact_email
+        self.admin = admin
+
+    # This is a method override from UserMixin
+    def get_id(self):
+        return self.username
 
 
 class Probe(Base):
@@ -21,23 +32,18 @@ class Probe(Base):
     name = Column(String(256))
     custom_id = Column(String(256))
     location = Column(String(256))
-    contact_person = Column(String(256))
-    contact_email = Column(String(256))
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='probes')
 
-    def __init__(self, name=None, custom_id=None, location=None,
-                 contact_person=None, contact_email=None):
+    def __init__(self, name=None, custom_id=None, location=None):
         self.name = name
         self.custom_id = custom_id
         self.location = location
-        self.contact_person = contact_person
-        self.contact_email = contact_email
 
     def __repr__(self):
-        return 'id={},name={},custom_id={},location={},contact_person={},contact_email={}'.format(
-                self.id, self.name, self.custom_id, self.location, self.contact_person, self.contact_email)
+        return 'id={},name={},custom_id={},location={}'.format(
+                self.id, self.name, self.custom_id, self.location)
 
 
 class Script(Base):

@@ -4,6 +4,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from re import fullmatch
 from probe_website import util, settings
 from probe_website import ansible_interface as ansible
+from flask import flash
 
 # The models module depend on this, so that's why it's global
 Base = declarative_base()
@@ -27,7 +28,7 @@ class DatabaseManager():
         Base.metadata.create_all(self.engine)
 
         if len(self.session.query(User).all()) == 0:
-            self.add_user('testuser', 'testpass')
+            self.add_user('admin', 'admin', 'admin', 'admin', True)
 
     def setup_relationships(self):
         Probe.scripts = relationship('Script',
@@ -53,13 +54,17 @@ class DatabaseManager():
     def shutdown_session(self):
         self.session.remove()
 
-    def add_user(self, username, password):
-        user = User(username, password)
-        self.add_default_databases(user)
-        self.session.add(user)
-        self.save_changes()
+    def add_user(self, username, password, contact_person, contact_email, admin=False):
+        if len(self.session.query(User).filter(User.username == username).all()) != 0:
+            return False
 
-    def add_probe(self, username, probe_name, custom_id, location=None, contact_person=None, contact_email=None, scripts=None, network_configs=None):
+        user = User(username, password, contact_person, contact_email, admin)
+        self.session.add(user)
+        self.add_default_databases(user)
+        self.save_changes()
+        return True
+
+    def add_probe(self, username, probe_name, custom_id, location=None, scripts=None, network_configs=None):
         ''' 
         Creates a probe instance, adds it to the database session, and returns
         it to the caller
@@ -69,8 +74,9 @@ class DatabaseManager():
             return None
 
         probe = Probe(probe_name, util.convert_mac(custom_id, mode='storage'),
-                      location, contact_person, contact_email)
-        self.session.add(probe)
+                      location)
+        user = self.get_user(username)
+        user.probes.append(probe)
 
         if scripts is None:
             self.load_default_scripts(probe, username)
@@ -88,13 +94,13 @@ class DatabaseManager():
         config = NetworkConfig(name, ssid, anonymous_id, username, password)
         probe.network_configs.append(config)
 
-    def add_database(self, user, name, db_type, address, port, username, password):
+    def add_database(self, user, db_type, name, address, port, username, password):
         # Need to take user into account here
         db = Database(name, db_type, address, port, username, password)
         user.databases.append(db)
 
     def add_default_databases(self, user):
-        self.add_database(user, 'influxdb', 'influxdb', '', '', '', '')
+        self.add_database(user, 'influxdb', '', '', '', '', '')
 
     def load_default_scripts(self, probe, username):
         configs = ansible.load_default_config(username, 'script_configs')
@@ -122,8 +128,8 @@ class DatabaseManager():
         configs = ansible.load_default_config(username, 'network_configs')
         ansible.load_default_certificate(username, probe.custom_id)
 
-        if 'group_network_configs' in configs:
-            for freq, config in configs['group_network_configs'].items():
+        if 'networks' in configs:
+            for freq, config in configs['networks'].items():
                 self.add_network_config(probe, freq, config['ssid'],
                                         config['anonymous_id'], config['username'], config['password'])
         else:
@@ -145,8 +151,7 @@ class DatabaseManager():
     def is_valid_string(self, entry):
         return type(entry) is str and entry != ''
 
-    def update_probe(self, current_probe_id, name=None, new_custom_id=None, location=None,
-                     contact_person=None, contact_email=None):
+    def update_probe(self, current_probe_id, name=None, new_custom_id=None, location=None):
         probe = self.get_probe(current_probe_id)
         if probe is None:
             return False
@@ -163,10 +168,6 @@ class DatabaseManager():
             probe.name = name
         if self.is_valid_string(location):
             probe.location = location
-        if self.is_valid_string(contact_person):
-            probe.contact_person = contact_person
-        if self.is_valid_string(contact_email):
-            probe.contact_email = contact_email
 
         return True
 
@@ -257,8 +258,8 @@ class DatabaseManager():
     def get_all_probes_data(self, username):
         all_data = []
         user = self.get_user(username)
-        # for probe in self.session.query(Probe).filter(Probe.user_id == user.id).all():
-        for probe in self.session.query(Probe).all():
+
+        for probe in self.session.query(Probe).filter(Probe.user_id == user.id).all():
             data_entry = self.get_probe_data(probe.custom_id)
 
             # We only want the basic data
@@ -275,8 +276,6 @@ class DatabaseManager():
                 'name': probe.name,
                 'id': util.convert_mac(probe.custom_id, mode='display'),
                 'location': probe.location,
-                'contact_person': probe.contact_person,
-                'contact_email': probe.contact_email,
                 'scripts': self.get_script_data(probe),
                 'network_configs': self.get_network_config_data(probe)
         }
@@ -341,6 +340,18 @@ class DatabaseManager():
             }
         return configs
 
+    def get_all_user_data(self):
+        users = []
+        for user in self.session.query(User).all():
+            data_entry = {
+                    'username': user.username,
+                    'password': '***',
+                    'contact_person': user.contact_person,
+                    'contact_email': user.contact_email
+            }
+            users.append(data_entry)
+        return users
+
     def get_user(self, username):
         return self.session.query(User).filter(User.username == username).first()
 
@@ -357,14 +368,33 @@ class DatabaseManager():
     def get_database(self, user, db_id):
         return self.session.query(Database).filter(Database.user_id == user.id, Database.id == db_id).first()
 
-    def remove_probe(self, probe_custom_id):
-        ansible.remove_host_cert(probe_custom_id)
+    def remove_probe(self, username, probe_custom_id):
         probe = self.get_probe(probe_custom_id)
+        if probe is None or self.get_user(username).id != probe.user_id:
+            flash('Invalid probe ID', 'error')
+            return False
+
+        ansible.remove_host_cert(probe_custom_id)
         if probe is not None:
             self.session.delete(probe)
 
-    # def remove_script(self, probe, script_filename):
-    #     script = self.session.query.filter(Probe.scripts.
+        return True
+
+    def remove_user(self, username):
+        user = self.get_user(username)
+        if user is None:
+            flash('Attempted to remove invalid username', 'error')
+            return False
+
+        for probe in self.session.query(Probe).filter(Probe.user_id == user.id).all():
+            self.remove_probe(username, probe.custom_id)
+
+        for database in self.session.query(Database).filter(Database.user_id == user.id).all():
+            self.session.delete(database)
+
+        self.session.delete(user)
+
+        return True
 
     def save_changes(self):
         self.session.commit()
