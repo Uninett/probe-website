@@ -45,7 +45,7 @@ def login():
         user = user_loader(username)
 
         # NB: Should not save passwords in plaintext (temporary solution)
-        if user is not None and user.password == password:
+        if user is not None and user.check_password(password):
             flask_login.login_user(user)
             return redirect(url_for('index'))
         else:

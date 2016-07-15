@@ -3,23 +3,31 @@ from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from probe_website.database import Base
 from flask_login import UserMixin
+from werkzeug.security import generate_password_hash, check_password_hash
 
 
 class User(Base, UserMixin):
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     username = Column(String(256))
-    password = Column(String(256))
+    pw_hash = Column(String(256))
     contact_person = Column(String(256))
     contact_email = Column(String(256))
     admin = Column(Boolean)
 
     def __init__(self, username, password, contact_person, contact_email, admin=False):
         self.username = username
-        self.password = password
         self.contact_person = contact_person
         self.contact_email = contact_email
         self.admin = admin
+
+        self.set_password(password)
+
+    def set_password(self, password):
+        self.pw_hash = generate_password_hash(password)
+
+    def check_password(self, password):
+        return check_password_hash(self.pw_hash, password)
 
     # This is a method override from UserMixin
     def get_id(self):
