@@ -1,6 +1,5 @@
 from flask import Flask
 from probe_website import settings
-import flask_login
 
 app = Flask(__name__)
 

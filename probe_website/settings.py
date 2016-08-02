@@ -2,7 +2,7 @@ ANSIBLE_PATH = '/home/frestr/Ansible/wifi_probe/'
 DATABASE_PATH = '/home/frestr/Projects/probe_website/database.db'
 
 CERTIFICATE_DIR = '/home/frestr/Ansible/wifi_probe/certs/'
-ALLOWED_CERT_EXTENSIONS = set(['cer', 'ca'])
+ALLOWED_CERT_EXTENSIONS = set(['cer', 'cert', 'ca', 'pem'])
 
 ERROR_MESSAGE = {
         'invalid_mac': (

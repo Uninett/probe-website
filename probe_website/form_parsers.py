@@ -72,6 +72,7 @@ def upload_certificate(probe_id, username):
     data = ansible_interface.get_certificate_data(username, probe_id)
     successful = True
 
+    # cert_paths = {'any': '', 'two_g': '', 'five_g': ''}
     for net_conf_id, tup in certs.items():
         freq = database.get_network_config(probe, net_conf_id).name
 
@@ -91,17 +92,23 @@ def upload_certificate(probe_id, username):
         if cert and util.allowed_cert_filename(cert.filename):
             filename = secure_filename(cert.filename)
 
-
             path = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id, freq)
             if os.path.exists(path):
                 shutil.rmtree(path)  # Empty the dir
             os.makedirs(path)
             cert.save(os.path.join(path, filename))
+            # if filename in cert_paths:
+            #     cert_paths[filename] = os.path.join(path, filename)
         else:
             flash('Invalid certificate filename extension.', 'error')
             successful = False
             break
 
+    # # This is not a good idea, since the config won't be exported for default values
+    # if successful:
+    #     ansible.export_group_config(username,
+    #                                 {'cert_paths': cert_paths },
+    #                                 'cert_paths')
     return successful
 
 

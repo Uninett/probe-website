@@ -4,13 +4,7 @@ import os.path
 from os import makedirs
 from subprocess import Popen
 import shutil
-import os.path
 
-# What needs to be done:
-#
-# a) Convert probe specific config to yaml
-# b) Save this config in the host_groups directory
-# c) Run ansible-playbook with all the (user's) probes
 
 def load_default_config(username, config_name):
     filename = os.path.join(settings.ANSIBLE_PATH, 'group_vars', username, config_name)
@@ -36,6 +30,18 @@ def export_host_config(probe_id, data, filename):
     probe_id = util.convert_mac(probe_id, mode='storage')
     dir_path = os.path.join(settings.ANSIBLE_PATH, 'host_vars', probe_id)
     _write_config(dir_path, data, filename)
+
+
+# Make a hosts file for this user at <ansible_root>/inventories/username/hosts
+def export_to_inventory(username):
+    dir_path = os.path.join(settings.ANSIBLE_PATH, 'inventories', username)
+    if not os.path.exists(dir_path):
+        makedirs(dir_path)
+
+    with open(os.path.join(dir_path, 'hosts'), 'w') as f:
+        # Each entry is in the form:
+        # <probe_wlan0_mac> ansible_host=localhost ansible_port=<probe_port> probe_name=<is this needed?>
+        pass
 
 
 def remove_host_config(probe_id):

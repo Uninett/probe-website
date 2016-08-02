@@ -73,8 +73,13 @@ class DatabaseManager():
         if not self.is_valid_id(custom_id):
             return None
 
+        port = self.generate_probe_port()
+        if port == -1:
+            print('Error generating port number. The port space may be '
+                  'exhausted (though that is unlikely)')
+
         probe = Probe(probe_name, util.convert_mac(custom_id, mode='storage'),
-                      location)
+                      location, port)
         user = self.get_user(username)
         user.probes.append(probe)
 
@@ -401,6 +406,20 @@ class DatabaseManager():
 
     def revert_changes(self):
         self.session.rollback()
+
+    def generate_probe_port(self):
+        base_port = 50000
+        max_port = 65000
+
+        probe_count = len(self.session.query(Probe).all())
+        port = base_port + probe_count
+
+        already_in_use = len(self.session.query(Probe).filter(Probe.port == port).all()) > 0
+
+        if port >= base_port and port <= max_port and not already_in_use:
+            return port
+        else:
+            return -1
 
     def __repr__(self):
         string = ''

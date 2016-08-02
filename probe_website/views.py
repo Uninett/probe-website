@@ -44,7 +44,6 @@ def login():
 
         user = user_loader(username)
 
-        # NB: Should not save passwords in plaintext (temporary solution)
         if user is not None and user.check_password(password):
             flask_login.login_user(user)
             return redirect(url_for('index'))
@@ -61,30 +60,10 @@ def logout():
     return redirect(url_for('login'))
 
 
-@app.route('/download_image', methods=['GET', 'POST'])
+@app.route('/download_image', methods=['GET'])
 @flask_login.login_required
 def download_image():
-    required_entries = [
-            {'name': 'ssid', 'description': 'SSID'},
-            {'name': 'anonymous_identity', 'description': 'Anonymous identity'},
-            {'name': 'identity', 'description': 'Identity'},
-            {'name': 'password', 'description': 'Password'}
-    ]
-    optional_entries = [
-            {'name': 'scan_ssid', 'description': 'Scan SSID', 'value': '1'},
-            {'name': 'key_mgmt', 'description': 'Key managment', 'value': 'WPA-EAP'},
-            {'name': 'eap', 'description': 'EAP', 'value': 'TTLS'},
-            {'name': 'phase1', 'description': 'Phase 1', 'value': 'peaplabel=0'},
-            {'name': 'phase2', 'description': 'Phase 2', 'value': 'auth=MSCHAPV2'},
-    ]
-    if request.method == 'POST':
-        return render_template('download_image.html',
-                               required=required_entries,
-                               optional=optional_entries)
-    else:
-        return render_template('download_image.html',
-                               required=required_entries,
-                               optional=optional_entries)
+    return render_template('download_image.html')
 
 
 @app.route('/databases', methods=['GET', 'POST'])
@@ -129,6 +108,7 @@ def probes():
                 ansible.export_host_config(probe.custom_id,
                                            {'networks': database.get_network_config_data(probe)},
                                            'network_configs')
+                ansible.export_inventory
 
     probes = database.get_all_probes_data(current_user.username)
     return render_template('probes.html', probes=probes)
@@ -139,11 +119,15 @@ def probes():
 def probe_setup():
     probe_id = request.args.get('id', '')
     if probe_id == '':
-        print('No probe ID specified')
+        flash('No probe ID specified')
         abort(404)
 
     probe_id = util.convert_mac(probe_id, mode='storage')
     probe = database.get_probe(probe_id)
+
+    if probe is None or probe.user.username != current_user.username:
+        flash('Unknown probe ID')
+        abort(404)
 
     if request.method == 'POST':
         successful_script_update = form_parsers.update_scripts()
@@ -209,6 +193,21 @@ def user_managment():
                     database.revert_changes()
 
     return render_template('user_managment.html', users=database.get_all_user_data())
+
+
+@app.route('/get_port', methods=['GET'])
+def get_port():
+    mac = request.args.get('mac', '')
+    if not util.is_mac_valid(mac):
+        return 'invalid-mac'
+
+    mac = util.convert_mac(mac, mode='storage')
+    probe = database.get_probe(mac)
+
+    if probe is None:
+        return 'unknown-mac'
+
+    return str(probe.port)
 
 
 #################################################################

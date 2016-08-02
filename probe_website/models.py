@@ -40,14 +40,16 @@ class Probe(Base):
     name = Column(String(256))
     custom_id = Column(String(256))
     location = Column(String(256))
+    port = Column(Integer)
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='probes')
 
-    def __init__(self, name=None, custom_id=None, location=None):
+    def __init__(self, name=None, custom_id=None, location=None, port=None):
         self.name = name
         self.custom_id = custom_id
         self.location = location
+        self.port = port
 
     def __repr__(self):
         return 'id={},name={},custom_id={},location={}'.format(
