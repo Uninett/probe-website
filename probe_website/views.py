@@ -194,6 +194,38 @@ def user_managment():
 
     return render_template('user_managment.html', users=database.get_all_user_data())
 
+# The following two views are used as an API for registering a new
+# probe, and are not meant to be accessed through a web browser
+
+@app.route('/register_key', methods=['POST'])
+def register_key():
+    mac = request.form.get('mac', '')
+    if not util.is_mac_valid(mac):
+        return 'invalid-mac'
+
+    mac = util.convert_mac(mac, mode='storage')
+    probe = database.get_probe(mac)
+
+    if probe is None:
+        return 'unknown-mac'
+
+    pub_key = request.form.get('key', '')
+
+    if pub_key == '' or not util.is_ssh_key_valid(pub_key):
+        return 'invalid-key'
+
+    # ONLY DISABLED FOR TESTING PURPOSES
+    # if probe.pub_key != '':
+    #     return 'already-registered'
+
+    probe.set_pub_key(pub_key)
+    database.save_changes()
+
+    # Here the key must be added as an authorized key for the
+    # unprivileged server user
+
+    return 'success'
+
 
 @app.route('/get_port', methods=['GET'])
 def get_port():
@@ -206,6 +238,9 @@ def get_port():
 
     if probe is None:
         return 'unknown-mac'
+
+    if probe.pub_key == '':
+        return 'no-registered-key'
 
     return str(probe.port)
 

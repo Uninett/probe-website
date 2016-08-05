@@ -77,6 +77,7 @@ class DatabaseManager():
         if port == -1:
             print('Error generating port number. The port space may be '
                   'exhausted (though that is unlikely)')
+            return None
 
         probe = Probe(probe_name, util.convert_mac(custom_id, mode='storage'),
                       location, port)
@@ -411,15 +412,14 @@ class DatabaseManager():
         base_port = 50000
         max_port = 65000
 
-        probe_count = len(self.session.query(Probe).all())
-        port = base_port + probe_count
-
-        already_in_use = len(self.session.query(Probe).filter(Probe.port == port).all()) > 0
-
-        if port >= base_port and port <= max_port and not already_in_use:
-            return port
-        else:
-            return -1
+        used_ports = [port for port, in self.session.query(Probe.port).all()]
+        i = 0
+        while True:
+            if base_port + i not in used_ports:
+                return base_port + i
+            elif base_port + i > max_port:
+                return -1
+            i += 1
 
     def __repr__(self):
         string = ''

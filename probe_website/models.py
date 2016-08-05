@@ -41,6 +41,7 @@ class Probe(Base):
     custom_id = Column(String(256))
     location = Column(String(256))
     port = Column(Integer)
+    pub_key = Column(String(1024))
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='probes')
@@ -50,6 +51,10 @@ class Probe(Base):
         self.custom_id = custom_id
         self.location = location
         self.port = port
+        self.set_pub_key('')
+
+    def set_pub_key(self, key):
+        self.pub_key = key
 
     def __repr__(self):
         return 'id={},name={},custom_id={},location={}'.format(
