@@ -1,0 +1,25 @@
+The following needs to be done before starting the web server (this should be automated with a script):
+
+1. Make an unpriviliged dummy user, which will be used to initiate reverse SSH connections to the probes.
+    - adduser dummy
+
+2. Generate an SSH key pair for the user
+    - login dummy
+    - ssh-keygen -t rsa -b 4096
+      (no key password)
+
+3. Make sure root owns 'get_probe_keys.sh' & the script is executable
+    - chown root get_probe_keys.sh
+    - chmod +x get_probe_keys.sh
+
+4. Move get_probe_keys.sh to /usr/bin
+
+5. Add the following line to the end of /etc/ssh/sshd_config:
+Match User dummy
+    AuthorizedKeysCommand /usr/bin/get_probe_keys.sh
+    AuthorizedKeysCommandUser nobody
+
+6. Make a file with the path to the sqlite database (the get_probe_keys script will need to access this file)
+    (will need to be root)
+    - mkdir /etc/wifi_probing
+    - add '/abs/path/to/database.db' to the file /etc/wifi_probing/db_path.txt
