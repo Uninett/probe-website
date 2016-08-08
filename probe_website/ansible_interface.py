@@ -44,6 +44,18 @@ def export_to_inventory(username):
         pass
 
 
+def export_known_hosts(database):
+    from probe_website.database import Probe
+
+    path = os.path.join(settings.ANSIBLE_PATH, 'known_hosts')
+
+    with open(path, 'w') as f:
+        for key, port in database.session.query(Probe.host_key, Probe.port).all():
+            if key != '':
+                key = key.replace('localhost', '[localhost]:{}'.format(port))
+                f.write(key + '\n')
+
+
 def remove_host_config(probe_id):
     probe_id = util.convert_mac(probe_id, mode='storage')
     dir_path = os.path.join(settings.ANSIBLE_PATH, 'host_vars', probe_id)

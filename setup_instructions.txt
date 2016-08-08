@@ -16,6 +16,7 @@ The following needs to be done before starting the web server (this should be au
 
 5. Add the following line to the end of /etc/ssh/sshd_config:
 Match User dummy
+    ForceCommand /bin/false
     AuthorizedKeysCommand /usr/bin/get_probe_keys.sh
     AuthorizedKeysCommandUser nobody
 

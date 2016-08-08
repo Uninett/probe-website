@@ -17,7 +17,7 @@
 #         * when all this is done, the probe is ready
 #           to be updated with Ansible from the server
 
-USAGE="Usage: $0 <image file (.img)> <wifi dongle driver (.ko)> <(unprivileged) server user used for reverse ssh> <main (privileged) user's public ssh key>"
+USAGE="Usage: $0 <image file (.img)> <wifi dongle driver (.ko)> <web server address> <(unprivileged) server user used for reverse ssh> <main (privileged) user's public ssh key>"
 
 # Read FILENAME
 if [[ $# != 4 ]]; then
@@ -30,19 +30,18 @@ if [[ "$EUID" != 0 ]]; then
     exit
 fi
 
-### THIS MUST BE CHANGED ###
-SERVER_ADDRESS="localhost:5000"
-############################
 ORIG_FILENAME="$1"
 WIFI_DRIVER="$2"
-SERVER_USER="$3"
-PUBKEY="$4"
+SERVER_ADDRESS="$3"
+SERVER_USER="$4"
+MAIN_PUBKEY="$5"
 
 
 echo "[+] Copying image..."
+# NB: This is just for testing. Uncomment when done testing
 # FILENAME="modified_$1"
 FILENAME="$ORIG_FILENAME"
-# cp $1 $FILENAME
+# cp "$1" "$FILENAME"
 
 
 echo "[+] Getting image offset"
@@ -65,7 +64,13 @@ echo "[+] Transferring init script & pub ssh key"
 mkdir -p "${MOUNT_DIR}/root/init/"
 cp "probe_init.sh" "${MOUNT_DIR}/root/init/probe_init.sh"
 chmod +x "${MOUNT_DIR}/root/init/probe_init.sh"
-cp "$PUBKEY" "${MOUNT_DIR}/root/init/server_key.pub"
+cp "$MAIN_PUBKEY" "${MOUNT_DIR}/root/init/main_key.pub"
+
+
+echo "[+] Transferring server host key (for known_hosts)"
+# Remove port part
+server_host=$(echo "$SERVER_ADDRESS" | sed 's/:.*//g')
+ssh-keyscan -t rsa localhost | sed "s/localhost/${server_host}/g" > "${MOUNT_DIR}/root/init/host_key"
 
 
 echo "[+] Transferring wifi driver"
@@ -90,9 +95,6 @@ WantedBy=multi-user.target" > ${MOUNT_DIR}/etc/systemd/system/probe_init.service
 # This is the same as 'systemctl enable reverse_ssh', just that we don't need
 # to run systemctl (we aren't running chroot)
 ln -s ${MOUNT_DIR}/etc/systemd/system/probe_init.service ${MOUNT_DIR}/etc/systemd/system/multi-user.target.wants/probe_init.service
-
-# echo "[+] Adding init script to crontab"
-# echo "@reboot root /root/init/probe_init.sh ${SERVER_ADDRESS} ${SERVER_USER}" >> "${MOUNT_DIR}/etc/crontab"
 
 
 # Unmount the image

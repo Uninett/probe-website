@@ -283,7 +283,9 @@ class DatabaseManager():
                 'id': util.convert_mac(probe.custom_id, mode='display'),
                 'location': probe.location,
                 'scripts': self.get_script_data(probe),
-                'network_configs': self.get_network_config_data(probe)
+                'network_configs': self.get_network_config_data(probe),
+                'associated': probe.associated,
+                'association_period_expired': probe.association_period_expired()
         }
         return data
 

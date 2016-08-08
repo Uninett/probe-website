@@ -4,6 +4,8 @@ from sqlalchemy.orm import relationship
 from probe_website.database import Base
 from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
+from time import time
+from probe_website.settings import PROBE_ASSOCIATION_PERIOD
 
 
 class User(Base, UserMixin):
@@ -42,6 +44,10 @@ class Probe(Base):
     location = Column(String(256))
     port = Column(Integer)
     pub_key = Column(String(1024))
+    host_key = Column(String(1024))
+
+    association_period_start = Column(Integer)
+    associated = Column(Boolean)
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='probes')
@@ -52,9 +58,22 @@ class Probe(Base):
         self.location = location
         self.port = port
         self.set_pub_key('')
+        self.set_host_key('')
+        self.activated = False
+        self.new_association_period()
 
     def set_pub_key(self, key):
         self.pub_key = key
+
+    def set_host_key(self, key):
+        self.host_key = key
+
+    def new_association_period(self):
+        self.association_period_start = int(time())
+
+    def association_period_expired(self):
+        # period_duration = 60*60  # One hour
+        return time() - self.association_period_start > PROBE_ASSOCIATION_PERIOD
 
     def __repr__(self):
         return 'id={},name={},custom_id={},location={}'.format(

@@ -8,8 +8,8 @@ SERVER_ADDRESS="$1"
 SERVER_USER="$2"
 
 function log_error {
-    echo "[!] $0: $SERVER_ADDRESS"
-    logger "[!] $0: $SERVER_ADDRESS"
+    echo "[!] $0: $1"
+    logger "[!] $0: $1"
 }
 
 if [[ $# != 2 ]]; then
@@ -21,14 +21,15 @@ fi
 echo "[+] Running depmod & installing necessary programs"
 depmod
 apt-get update
-apt-get install autossh curl
+apt-get --yes install autossh curl
 
 
 if [[ ! -f ~/.ssh/id_rsa ]]; then
     echo "[+] Generating ssh keys"
     echo "y" | ssh-keygen -q -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
 fi
-cp "/root/init/id_rsa.pub" "/root/.ssh/authorized_keys"
+cp "/root/init/main_key.pub" "/root/.ssh/authorized_keys"
+cp "/root/init/host_key" "/root/.ssh/known_hosts"
 
 
 echo "[+] Gathering wlan MAC address"
@@ -45,7 +46,8 @@ fi
 
 echo "[+] Registering ssh key with server"
 pub_key=$(cat /root/.ssh/id_rsa.pub)
-reg_resp=$(curl -s "http://${SERVER_ADDRESS}/register_key" --data-urlencode "mac=${mac}" --data-urlencode "key=${pub_key}")
+host_key=$(ssh-keyscan -t rsa localhost)
+reg_resp=$(curl -s "http://${SERVER_ADDRESS}/register_key" --data-urlencode "mac=${mac}" --data-urlencode "pub_key=${pub_key}" --data-urlencode "host_key=${host_key}")
 
 if [[ "$reg_resp" != "success" ]]; then
     log_error "Error when registering key: $reg_resp"

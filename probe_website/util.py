@@ -9,15 +9,27 @@ def is_mac_valid(mac):
     return fullmatch('(([0-9a-fA-F]:?){2}){5}[0-9a-fA-F]{2}', mac) is not None
 
 
-def is_ssh_key_valid(key):
+def is_pub_ssh_key_valid(key):
     try:
-        name, key, comment = key.split()
+        mode, key, comment = key.split()
     except:
         return False
 
-    return (name == 'ssh-rsa' and
+    return (mode == 'ssh-rsa' and
             'AAAAB3NzaC1yc2EA' in key and
             len(comment.split('@')) == 2)
+
+def is_ssh_host_key_valid(key):
+    try:
+        hostname, mode, key = key.split()
+    except:
+        return False
+
+    # hostname should be localhost, because we are using reverse SSH
+    # against localhost here
+    return (hostname == 'localhost' and
+            mode == 'ssh-rsa' and
+            'AAAAB3NzaC1yc2EA' in key)
 
 
 def convert_mac(mac, mode):

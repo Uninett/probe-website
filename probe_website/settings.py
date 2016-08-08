@@ -21,3 +21,5 @@ ERROR_MESSAGE = {
             'The supplied certificate file is invalid, or something went wrong when uploading it.'
         )
 }
+
+PROBE_ASSOCIATION_PERIOD = 60*60  # In seconds, i.e. one hour
