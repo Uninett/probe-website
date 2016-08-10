@@ -1,5 +1,6 @@
 from re import fullmatch
 from probe_website import settings
+import subprocess
 
 
 def is_mac_valid(mac):
@@ -75,3 +76,20 @@ def parse_configs(configs, config_type):
 def allowed_cert_filename(filename):
     return '.' in filename and filename.rsplit('.', 1)[1] in \
             settings.ALLOWED_CERT_EXTENSIONS
+
+
+# Uses nc (netcat) to check whether a probe is connected to
+# the specified port
+def is_probe_connected(port):
+    try:
+        port = str(port)
+        if not fullmatch('[0-9]{1,5}', port):
+            raise Exception
+    except:
+        print('Invalid port number')
+        return -1
+
+    command = ['nc', '-z', 'localhost', port]
+    rcode = subprocess.call(command)
+
+    return True if rcode == 0 else False

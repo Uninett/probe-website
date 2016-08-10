@@ -1,26 +1,16 @@
 #!/bin/bash
 
-# This script does the following:
-#     - Takes a FILENAME as an argument
-#         * The file is the (Kali) RPi ARM image
-#     - Adds the public SSH key of this computer to
-#       the image (so the image must be generated on
-#       the same computer that will host the website)
-#     - Adds a script to the image that when the rpi
-#       boots does:
-#         * apt-get update
-#         * apt-get install autossh
-#         * get wlan mac adress and query web server
-#           for port
-#         * construct autossh command for reverse ssh
-#           with the received port
-#         * when all this is done, the probe is ready
-#           to be updated with Ansible from the server
+# This script customizes a kali linux ARM image by adding stuff like
+# the required driver, ssh keys, server location etc.
 
-USAGE="Usage: $0 <image file (.img)> <wifi dongle driver (.ko)> <web server address> <(unprivileged) server user used for reverse ssh> <main (privileged) user's public ssh key>"
+USAGE="Usage: $0 
+<image file (.img)> 
+<wifi dongle driver (.ko)> 
+<web server address> 
+<(unprivileged) server user used for reverse ssh> 
+<main (privileged) user's public ssh key>"
 
-# Read FILENAME
-if [[ $# != 4 ]]; then
+if [[ $# != 5 ]]; then
     echo "$USAGE"
     exit
 fi
@@ -37,11 +27,10 @@ SERVER_USER="$4"
 MAIN_PUBKEY="$5"
 
 
-echo "[+] Copying image..."
-# NB: This is just for testing. Uncomment when done testing
-# FILENAME="modified_$1"
-FILENAME="$ORIG_FILENAME"
-# cp "$1" "$FILENAME"
+echo "[~] Copying image..."
+FILENAME="modified_${ORIG_FILENAME}"
+cp "$ORIG_FILENAME" "$FILENAME"
+echo "[+] Done"
 
 
 echo "[+] Getting image offset"
@@ -74,8 +63,11 @@ ssh-keyscan -t rsa localhost | sed "s/localhost/${server_host}/g" > "${MOUNT_DIR
 
 
 echo "[+] Transferring wifi driver"
-cp "$WIFI_DRIVER" ${MOUNT_DIR}/lib/modules/*/kernel/drivers/net/wireless/8812.ko
-echo "8812au" >> "${MOUNT_DIR}/etc/modules"
+cp "$WIFI_DRIVER" "8812au.ko"
+mv "8812au.ko" ${MOUNT_DIR}/lib/modules/*/kernel/drivers/net/wireless/
+if [[ $(grep '8812au' ${MOUNT_DIR}/etc/modules) == "" ]]; then
+    echo "8812au" >> "${MOUNT_DIR}/etc/modules"
+fi
 
 
 echo "[+] Generating systemd unit file for init script"
@@ -86,7 +78,7 @@ Description=Probe init script
 [Service]
 Type=simple
 ExecStart=/root/init/probe_init.sh ${SERVER_ADDRESS} ${SERVER_USER}
-Restart=always
+Restart=on-failure
 RestartSec=30
 
 [Install]
@@ -95,6 +87,20 @@ WantedBy=multi-user.target" > ${MOUNT_DIR}/etc/systemd/system/probe_init.service
 # This is the same as 'systemctl enable reverse_ssh', just that we don't need
 # to run systemctl (we aren't running chroot)
 ln -s ${MOUNT_DIR}/etc/systemd/system/probe_init.service ${MOUNT_DIR}/etc/systemd/system/multi-user.target.wants/probe_init.service
+
+
+# This script makes the rpi shut down when the wifi dongle is ejected.
+# This is necessary because the rpi has no on/off switch, but just
+# directly cutting the power can cause file corruption, and will
+# not close the SSH tunnel properly.
+echo "[+] Adding wifi dongle shutdown script"
+# These values are specific to the D-Link DWA-171 dongle. To get the
+# values, run the command 'udevadm monitor --udev --property' with the
+# dongle connected, and then disconnect it. The values will pop up
+# at stdout
+ID_MODEL_ID=3314
+ID_VENDOR_ID=2001
+echo 'ACTION=="remove", ENV{ID_VENDOR_ID}=="'"${ID_VENDOR_ID}"'", ENV{ID_MODEL_ID}=="'"${ID_MODEL_ID}"'", RUN+="/sbin/shutdown -h now"' > ${MOUNT_DIR}/etc/udev/rules.d/00-dongle_shutdown.rules
 
 
 # Unmount the image

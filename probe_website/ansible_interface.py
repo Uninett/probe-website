@@ -115,7 +115,7 @@ def get_certificate_data(username, probe_id):
             # There should in theory only be one file  in this directory
             if len(files) > 0:
                 data[freq] = files[0]
-        
+
     return data
 
 

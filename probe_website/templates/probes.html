@@ -21,7 +21,7 @@
             <th>MAC address</th>
             <th>Location</th>
             <th colspan="2">Actions</th>
-            <th>Association</th>
+            <th colspan="2">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -53,6 +53,13 @@
                 <button type="submit" class="btn btn-danger" name="action" value="renew_period">Association period expired<br>(Click to renew period)</button>
                 {% endif %}
               </form>
+            </td>
+            <td>
+              {% if probe.connected %}
+              <p style="color:green;">Connected!</p>
+              {% else %}
+              <p style="color:red;">Not connected</p>
+              {% endif %}
             </td>
           </tr>
         {% endfor %}

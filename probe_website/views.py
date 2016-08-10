@@ -101,6 +101,7 @@ def probes():
                 database.save_changes()
         elif action == 'renew_period':
             probe_id = request.form.get('probe_id', '')
+            probe_id = util.convert_mac(probe_id, mode='storage')
             probe = database.get_probe(probe_id)
             if probe is not None and probe.user.username == current_user.username:
                 probe.new_association_period()
@@ -224,12 +225,11 @@ def register_key():
     if host_key == '' or not util.is_ssh_host_key_valid(host_key):
         return 'invalid-host-key'
 
+    if probe.pub_key != '' or probe.host_key != '':
+        return 'already-registered'
+
     if probe.association_period_expired():
         return 'association-period-expired'
-
-    # ONLY DISABLED FOR TESTING PURPOSES
-    # if probe.pub_key != '' or probe.host_key != '':
-    #     return 'already-registered'
 
     probe.set_pub_key(pub_key)
     probe.set_host_key(host_key)

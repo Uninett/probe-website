@@ -285,7 +285,8 @@ class DatabaseManager():
                 'scripts': self.get_script_data(probe),
                 'network_configs': self.get_network_config_data(probe),
                 'associated': probe.associated,
-                'association_period_expired': probe.association_period_expired()
+                'association_period_expired': probe.association_period_expired(),
+                'connected': util.is_probe_connected(probe.port)
         }
         return data
 
@@ -382,7 +383,8 @@ class DatabaseManager():
             flash('Invalid probe ID', 'error')
             return False
 
-        ansible.remove_host_cert(probe_custom_id)
+        probe_id = util.convert_mac(probe_custom_id, mode='storage')
+        ansible.remove_host_cert(probe_id)
         if probe is not None:
             self.session.delete(probe)
 

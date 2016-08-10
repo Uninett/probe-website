@@ -18,8 +18,12 @@ if [[ $# != 2 ]]; then
 fi
 
 
-echo "[+] Running depmod & installing necessary programs"
+echo "[+] Installing wifi driver"
 depmod
+modprobe 8812au
+
+
+echo "[+] Installing necessary programs"
 apt-get update
 apt-get --yes install autossh curl
 
@@ -28,6 +32,7 @@ if [[ ! -f ~/.ssh/id_rsa ]]; then
     echo "[+] Generating ssh keys"
     echo "y" | ssh-keygen -q -t rsa -b 4096 -N "" -f ~/.ssh/id_rsa
 fi
+echo "[+] Adding server ssh keys as auth and known"
 cp "/root/init/main_key.pub" "/root/.ssh/authorized_keys"
 cp "/root/init/host_key" "/root/.ssh/known_hosts"
 
@@ -39,31 +44,52 @@ if [[ "$mac" == "" || $(iwconfig wlan0 | grep REALTEK) == "" ]]; then
     mac=$(ifconfig wlan1 | grep -oE '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | sed 's/://g')
     if [[ "$mac" == "" || $(iwconfig wlan1 | grep REALTEK) == "" ]]; then
         log_error "Unable to read wlan MAC"
-        exit
+        exit 1
     fi
 fi
 
 
-echo "[+] Registering ssh key with server"
 pub_key=$(cat /root/.ssh/id_rsa.pub)
 host_key=$(ssh-keyscan -t rsa localhost)
-reg_resp=$(curl -s "http://${SERVER_ADDRESS}/register_key" --data-urlencode "mac=${mac}" --data-urlencode "pub_key=${pub_key}" --data-urlencode "host_key=${host_key}")
 
-if [[ "$reg_resp" != "success" ]]; then
-    log_error "Error when registering key: $reg_resp"
-    # Continue if the error is already-registered; otherwise quit
-    if [[ "$reg_resp" != "already-registered" ]]; then
-        exit
+while true; do
+    echo "[~] Attempting to register ssh key with server"
+    resp=$(curl -s "http://${SERVER_ADDRESS}/register_key" --data-urlencode "mac=${mac}" --data-urlencode "pub_key=${pub_key}" --data-urlencode "host_key=${host_key}")
+
+    if [[ "$resp" != "success" ]]; then
+        log_error "Error when registering key: $resp"
+        # Continue if the probe has already been registered
+        if [[ "$resp" == "already-registered" ]]; then
+            echo "[*] Already registered"
+            break
+        # Start over if some values are invalid (systemd will restart the script for us)
+        elif [[ "$resp" == "invalid-pub-key" || "$resp" == "invalid-host-key" ]]; then
+            exit 1 
+        fi
+        # Otherwise wait and try again (e.g. if the rpi couldn't contact the server,
+        # or the association time had expired)
+        sleep 10
+    else
+        echo "[+] Success"
+        break
     fi
-fi
+done
 
 
-echo "[+] Asking server for available ssh port"
-ssh_port=$(curl -s "http://${SERVER_ADDRESS}/get_port?mac=${mac}")
-if [[ ! "$ssh_port" =~ [0-9]{1,5} ]]; then
-    log_error "Error when querying for port: $ssh_port"
-    exit
-fi
+while true; do
+    echo "[~] Asking server for available ssh port"
+    ssh_port=$(curl -s "http://${SERVER_ADDRESS}/get_port?mac=${mac}")
+    if [[ ! "$ssh_port" =~ [0-9]{1,5} ]]; then
+        log_error "Error when querying for port: $ssh_port"
+        if [[ "$ssh_port" == "invalid-mac" ]]; then
+            exit 1
+        fi
+        sleep 10
+    else
+        echo "[+] Port received"
+        break
+    fi
+done
 
 
 # echo "[+] Adding autossh cmd to crontab"
@@ -89,9 +115,7 @@ systemctl enable reverse_ssh
 
 
 # Prevent this script from running on subsequent boots
-# (removes the last line in the crontab)
 echo "[+] Disabling this init script"
-# sed -i '$d' "/etc/crontab"
 systemctl disable probe_init
 
 

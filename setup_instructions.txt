@@ -1,5 +1,9 @@
 The following needs to be done before starting the web server (this should be automated with a script):
 
+0. The following programs need to be installed:
+    - python3
+    - nc (netcat)
+
 1. Make an unpriviliged dummy user, which will be used to initiate reverse SSH connections to the probes.
     - adduser dummy
 
