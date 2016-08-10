@@ -22,4 +22,11 @@ ERROR_MESSAGE = {
         )
 }
 
+INFO_MESSAGE = {
+        'ansible_already_running': (
+            'Update is already in progress. Please wait for it to complete before '
+            'trying to update again.'
+        )
+}
+
 PROBE_ASSOCIATION_PERIOD = 60*60  # In seconds, i.e. one hour

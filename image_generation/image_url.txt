@@ -1,0 +1,5 @@
+Different iamges:
+https://www.offensive-security.com/kali-linux-arm-images/
+
+Current image:
+https://images.offensive-security.com/arm-images/kali-2.1.2-rpi2.img.xz

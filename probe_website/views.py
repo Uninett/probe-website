@@ -106,18 +106,22 @@ def probes():
                 probe.new_association_period()
                 database.save_changes()
         elif action == 'push_config':
-            # Export the script configs in the sql database to ansible readable configs
-            user = database.get_user(current_user.username)
-            for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
-                ansible.export_host_config(probe.custom_id,
-                                           {'host_script_configs': database.get_script_data(probe)},
-                                           'script_configs')
-                ansible.export_host_config(probe.custom_id,
-                                           {'networks': database.get_network_config_data(probe)},
-                                           'network_configs')
-            ansible.export_to_inventory(current_user.username, database)
-            ansible.export_known_hosts(database)
-            ansible.run_ansible_playbook(current_user.username)
+            # Only run one instance of Ansible at a time (for each user)
+            if ansible.get_playbook_status(current_user.username) != 'running':
+                # Export the script configs in the sql database to ansible readable configs
+                user = database.get_user(current_user.username)
+                for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
+                    ansible.export_host_config(probe.custom_id,
+                                               {'host_script_configs': database.get_script_data(probe)},
+                                               'script_configs')
+                    ansible.export_host_config(probe.custom_id,
+                                               {'networks': database.get_network_config_data(probe)},
+                                               'network_configs')
+                ansible.export_to_inventory(current_user.username, database)
+                ansible.export_known_hosts(database)
+                ansible.run_ansible_playbook(current_user.username)
+            else:
+                flash(settings.INFO_MESSAGE['ansible_already_running'], 'info')
 
     probes = database.get_all_probes_data(current_user.username)
     return render_template('probes.html', probes=probes)
