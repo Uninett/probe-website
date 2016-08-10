@@ -1,6 +1,6 @@
 from re import fullmatch
 from probe_website import settings
-import subprocess
+from subprocess import call
 
 
 def is_mac_valid(mac):
@@ -90,6 +90,6 @@ def is_probe_connected(port):
         return -1
 
     command = ['nc', '-z', 'localhost', port]
-    rcode = subprocess.call(command)
+    ret_code = call(command)
 
-    return True if rcode == 0 else False
+    return True if ret_code == 0 else False

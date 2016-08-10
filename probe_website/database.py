@@ -265,16 +265,28 @@ class DatabaseManager():
         all_data = []
         user = self.get_user(username)
 
+        ansible_status = ansible.get_playbook_status(username)
         for probe in self.session.query(Probe).filter(Probe.user_id == user.id).all():
             data_entry = self.get_probe_data(probe.custom_id)
 
-            # We only want the basic data
+            if ansible_status is None or not util.is_probe_connected(probe.port):
+                data_entry['ansible_status'] = ''
+            elif type(ansible_status) == dict:
+                try:
+                    data_entry['ansible_status'] = ansible_status[probe.custom_id]
+                except:
+                    data_entry['ansible_status'] = ''
+            elif type(ansible_status) != str:
+                data_entry['ansible_status'] = ''
+            else:
+                data_entry['ansible_status'] = ansible_status
+
+            # We don't need the detailed data
             data_entry.pop('scripts')
             data_entry.pop('network_configs')
             all_data.append(data_entry)
 
         return all_data
-
 
     def get_probe_data(self, probe_id):
         probe = self.get_probe(probe_id)

@@ -20,8 +20,9 @@
             <th>Name</th>
             <th>MAC address</th>
             <th>Location</th>
+            <th colspan="2">Probe status</th>
+            <th>Update status</th>
             <th colspan="2">Actions</th>
-            <th colspan="2">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -32,21 +33,10 @@
             <td>{{ probe.id }}</td>
             <td>{{ probe.location }}</td>
             <td>
-              <a href="{{ url_for('probe_setup', id=probe.id) }}">
-                <button type="button" class="btn btn-default" name="edit">Edit</button>
-              </a>
-            </td>
-            <td>
-              <form method="POST">
-                <input type="hidden" name="probe_id" value="{{ probe.id }}"/>
-                <button type="submit" class="btn btn-default" name="action" value="remove_probe">Remove</button>
-              </form>
-            </td>
-            <td>
               <form method="POST">
                 <input type="hidden" name="probe_id" value="{{ probe.id }}"/>
                 {% if probe.associated %}
-                <button type="submit" class="btn btn-success" name="action" value="renew_period" disabled>Associated!</button>
+                <button type="submit" class="btn btn-success" name="action" value="renew_period" disabled>Associated</button>
                 {% elif not probe.association_period_expired %}
                 <button type="submit" class="btn btn-warning" name="action" value="renew_period">Waiting for association...<br>(Click to renew period)</button>
                 {% else %}
@@ -56,10 +46,32 @@
             </td>
             <td>
               {% if probe.connected %}
-              <p style="color:green;">Connected!</p>
+              <p style="color:green;">Connected</p>
               {% else %}
               <p style="color:red;">Not connected</p>
               {% endif %}
+            </td>
+            <td>
+              {% if probe.ansible_status == 'running' %}
+              <p style="color:orange;">Updating...</p>
+              {% elif probe.ansible_status == 'succeeded' %}
+              <p style="color:green;">Completed</p>
+              {% elif probe.ansible_status == 'failed' %}
+              <p style="color:red;">Failed</p>
+              {% else %}
+              <p>Not running</p>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{{ url_for('probe_setup', id=probe.id) }}">
+                <button type="button" class="btn btn-default" name="edit">Edit</button>
+              </a>
+            </td>
+            <td>
+              <form method="POST">
+                <input type="hidden" name="probe_id" value="{{ probe.id }}"/>
+                <button type="submit" class="btn btn-default" name="action" value="remove_probe">Remove</button>
+              </form>
             </td>
           </tr>
         {% endfor %}
@@ -75,7 +87,7 @@
               <td>
                 <input type="text" class="form-control" name="probe_location" required>
               </td> 
-              <td colspan="2">
+              <td colspan="5">
                 <button type="submit" class="btn btn-lg btn-default" name="action" value="new_probe">Add new probe</button>
               </td>
             </form>

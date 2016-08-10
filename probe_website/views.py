@@ -1,7 +1,7 @@
 from probe_website import app
 from flask import render_template, request, abort, redirect, url_for, flash
 import probe_website.database
-from probe_website.database import User
+from probe_website.database import User, Probe
 from probe_website import settings, form_parsers, util
 from probe_website import ansible_interface as ansible
 import flask_login
@@ -101,21 +101,23 @@ def probes():
                 database.save_changes()
         elif action == 'renew_period':
             probe_id = request.form.get('probe_id', '')
-            probe_id = util.convert_mac(probe_id, mode='storage')
             probe = database.get_probe(probe_id)
             if probe is not None and probe.user.username == current_user.username:
                 probe.new_association_period()
                 database.save_changes()
         elif action == 'push_config':
             # Export the script configs in the sql database to ansible readable configs
-            for probe in database.session.query(probe_website.database.Probe).all():
+            user = database.get_user(current_user.username)
+            for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
                 ansible.export_host_config(probe.custom_id,
                                            {'host_script_configs': database.get_script_data(probe)},
                                            'script_configs')
                 ansible.export_host_config(probe.custom_id,
                                            {'networks': database.get_network_config_data(probe)},
                                            'network_configs')
-                #ansible.export_to_inventory
+            ansible.export_to_inventory(current_user.username, database)
+            ansible.export_known_hosts(database)
+            ansible.run_ansible_playbook(current_user.username)
 
     probes = database.get_all_probes_data(current_user.username)
     return render_template('probes.html', probes=probes)

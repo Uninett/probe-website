@@ -2,8 +2,9 @@ from probe_website import settings, util, app
 import yaml
 import os.path
 from os import makedirs
-from subprocess import Popen
 import shutil
+from subprocess import Popen
+import re
 
 
 def load_default_config(username, config_name):
@@ -33,15 +34,23 @@ def export_host_config(probe_id, data, filename):
 
 
 # Make a hosts file for this user at <ansible_root>/inventories/username/hosts
-def export_to_inventory(username):
-    dir_path = os.path.join(settings.ANSIBLE_PATH, 'inventories', username)
+def export_to_inventory(username, database):
+    from probe_website.database import Probe
+
+    dir_path = os.path.join(settings.ANSIBLE_PATH, 'inventory')
     if not os.path.exists(dir_path):
         makedirs(dir_path)
 
-    with open(os.path.join(dir_path, 'hosts'), 'w') as f:
-        # Each entry is in the form:
-        # <probe_wlan0_mac> ansible_host=localhost ansible_port=<probe_port> probe_name=<is this needed?>
-        pass
+    user = database.get_user(username)
+    with open(os.path.join(dir_path, username), 'w') as f:
+        f.write('[{}]\n'.format(username))
+        for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
+            if util.is_probe_connected(probe.port):
+                entry = '{} ansible_host=localhost ansible_port={} probe_name="{}"'.format(
+                            probe.custom_id,
+                            probe.port,
+                            probe.name)
+                f.write(entry + '\n')
 
 
 def export_known_hosts(database):
@@ -119,11 +128,59 @@ def get_certificate_data(username, probe_id):
     return data
 
 
-def update_hosts_file():
-    pass
-
-
 def run_ansible_playbook(username):
-    command = ['ansible-playbook', '-i', settings.ANSIBLE_PATH + 'hosts',
-               settings.ANSIBLE_PATH + 'probe.yml', '--vault-password-file',
-               settings.ANSBILE_PATH + 'vault_pass.txt']
+    command = ['ansible-playbook',
+               '-i', os.path.join(settings.ANSIBLE_PATH, 'inventory', username),
+               os.path.join(settings.ANSIBLE_PATH, 'probe.yml'),
+               '--vault-password-file', os.path.join(settings.ANSIBLE_PATH, 'vault_pass.txt'),
+               "--ssh-common-args='-o UserKnownHostsFile={}/known_hosts'".format(settings.ANSIBLE_PATH)]
+
+    dir_path = os.path.join(settings.ANSIBLE_PATH, 'logs')
+    if not os.path.exists(dir_path):
+        makedirs(dir_path)
+    log_file = open(os.path.join(dir_path, username), 'w')
+
+    # This is a little hacky, but to make it clear that we have started
+    # the playbook before it has gotten time to write anything to the
+    # log, we will write a single character to the log, so the code for displaying
+    # the update status won't say 'Not running' for the immediately
+    # reloaded page
+    log_file.write(' ')
+
+    # This will run in parallell with the web application. stdout will
+    # be logged to the log_file, so to check the status of the command,
+    # just check that file (if the 'PLAY RECAP' string is in the log,
+    # the command has been completed)
+    Popen(command, stdout=log_file)
+
+
+# Reads the log from running the ansible-playbook command (done in func
+# run_ansible_playbook), and returns:
+#   * Not started (no log file or empty):       None
+#   * Unfinished (No 'PLAY RECAP' in log file): 'running'
+#   * Finished ('PLAY RECAP' in log file):      dictionary of each probe's state, like:
+#       status = {'123456abcdef': 'succeeded',
+#                 'abcdef123456': 'failed'}
+def get_playbook_status(username):
+    log_file = os.path.join(settings.ANSIBLE_PATH, 'logs', username)
+    if not os.path.isfile(log_file):
+        return None
+
+    with open(log_file, 'r') as f:
+        cont = f.read()
+        if cont == '':
+            return None
+        if 'PLAY RECAP' not in cont:
+            return 'running'
+        if 'PLAY RECAP' in cont:
+            # Matches lines like this, and extracts the numbers:
+            # '12af4521deee               : ok=0    changed=0    unreachable=1    failed=0' 
+            regex = '([a-zA-Z0-9_-]+)\s+:\s+ok=([0-9]+)+\s+changed=([0-9]+)\s+unreachable=([0-9]+)+\s+failed=([0-9]+)+'
+            probes = re.findall(regex, cont)
+            status = {name: int(unreachable)+int(failed) for name, ok, changed, unreachable, failed in probes}
+            for key, value in status.items():
+                status[key] = 'succeeded' if value == 0 else 'failed'
+
+            return status
+
+        return None
