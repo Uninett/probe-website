@@ -7,6 +7,9 @@ from subprocess import Popen
 import re
 
 
+ANSIBLE_PID = 0
+
+
 def load_default_config(username, config_name):
     filename = os.path.join(settings.ANSIBLE_PATH, 'group_vars', username, config_name)
     # Change to global default if there is no group default
@@ -45,7 +48,7 @@ def export_to_inventory(username, database):
     with open(os.path.join(dir_path, username), 'w') as f:
         f.write('[{}]\n'.format(username))
         for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
-            if util.is_probe_connected(probe.port):
+            if probe.associated and util.is_probe_connected(probe.port):
                 entry = '{} ansible_host=localhost ansible_port={} probe_name="{}"'.format(
                             probe.custom_id,
                             probe.port,
@@ -139,19 +142,15 @@ def run_ansible_playbook(username):
     if not os.path.exists(dir_path):
         makedirs(dir_path)
     log_file = open(os.path.join(dir_path, username), 'w')
+    log_file.write('')  # Be sure to clear the file
 
-    # This is a little hacky, but to make it clear that we have started
-    # the playbook before it has gotten time to write anything to the
-    # log, we will write a single character to the log, so the code for displaying
-    # the update status won't say 'Not running' for the immediately
-    # reloaded page
-    log_file.write(' ')
-
-    # This will run in parallell with the web application. stdout will
+    # This will run in parallel with the web application. stdout will
     # be logged to the log_file, so to check the status of the command,
     # just check that file (if the 'PLAY RECAP' string is in the log,
     # the command has been completed)
-    Popen(command, stdout=log_file)
+    proc = Popen(command, stdout=log_file)
+    global ANSIBLE_PID
+    ANSIBLE_PID = proc.pid
 
 
 # Reads the log from running the ansible-playbook command (done in func
@@ -168,11 +167,11 @@ def get_playbook_status(username):
 
     with open(log_file, 'r') as f:
         cont = f.read()
-        if cont == '':
+        if ANSIBLE_PID == 0:
             return None
-        if 'PLAY RECAP' not in cont:
+        elif 'PLAY RECAP' not in cont:
             return 'running'
-        if 'PLAY RECAP' in cont:
+        elif 'PLAY RECAP' in cont:
             # Matches lines like this, and extracts the numbers:
             # '12af4521deee               : ok=0    changed=0    unreachable=1    failed=0' 
             regex = '([a-zA-Z0-9_-]+)\s+:\s+ok=([0-9]+)+\s+changed=([0-9]+)\s+unreachable=([0-9]+)+\s+failed=([0-9]+)+'
@@ -181,6 +180,8 @@ def get_playbook_status(username):
             for key, value in status.items():
                 status[key] = 'succeeded' if value == 0 else 'failed'
 
+            global ANSIBLE_PID
+            ANSIBLE_PID = 0
             return status
 
         return None

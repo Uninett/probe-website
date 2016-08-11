@@ -22,7 +22,7 @@ class DatabaseManager():
 
         global Base
         Base.query = self.session.query_property()
-        
+
         self.setup_relationships()
 
         Base.metadata.create_all(self.engine)

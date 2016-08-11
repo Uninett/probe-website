@@ -13,6 +13,10 @@ ERROR_MESSAGE = {
         ),
         'invalid_certificate': (
             'The supplied certificate file is invalid, or something went wrong when uploading it.'
+        ),
+        'fill_out_network_credentials': (
+            'Please fill out the network credentials for {} before pushing configuration.'
+            '(Click the Edit button to the right)'
         )
 }
 

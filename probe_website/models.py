@@ -127,7 +127,16 @@ class NetworkConfig(Base):
         
     def __repr__(self):
         return ('id={},name={},ssid={},anonymous_id={},username={}'.format(self.id,
-                    self.name, self.ssid, self.anonymousd_id, self.username))
+                    self.name, self.ssid, self.anonymous_id, self.username))
+
+    def is_filled(self):
+        def filled(x):
+            return x is not None and x != ''
+        return (filled(self.name) and
+                filled(self.ssid) and
+                filled(self.anonymous_id) and
+                filled(self.username) and
+                filled(self.password))
 
 class Database(Base):
     __tablename__ = 'databases'
