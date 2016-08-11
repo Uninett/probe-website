@@ -255,6 +255,23 @@ class DatabaseManager():
 
         return True
 
+    def update_user(self, current_username, new_username=None, password=None,
+                    contact_person=None, contact_email=None):
+        user = self.get_user(current_username)
+        if user is None:
+            return False
+
+        if self.is_valid_string(new_username) and ' ' not in new_username:
+            user.username = new_username
+        if self.is_valid_string(password) and password != '***':
+            user.set_password(password)
+        if self.is_valid_string(contact_person):
+            user.contact_person = contact_person
+        if self.is_valid_string(contact_email):
+            user.contact_email = contact_email
+
+        return True
+
     # This method should only return probes associated with the specified
     # username, but atm support for different users aren't implemented, so
     # just return everything
@@ -269,14 +286,14 @@ class DatabaseManager():
         for probe in self.session.query(Probe).filter(Probe.user_id == user.id).all():
             data_entry = self.get_probe_data(probe.custom_id)
 
-            if ansible_status is None or not util.is_probe_connected(probe.port):
-                data_entry['ansible_status'] = ''
-            elif type(ansible_status) == dict:
+            if type(ansible_status) == dict:
                 try:
                     data_entry['ansible_status'] = ansible_status[probe.custom_id]
                 except:
                     data_entry['ansible_status'] = ''
-            elif type(ansible_status) != str:
+            elif (ansible_status is None or 
+                    not util.is_probe_connected(probe.port) or
+                    type(ansible_status) != str):
                 data_entry['ansible_status'] = ''
             else:
                 data_entry['ansible_status'] = ansible_status
@@ -361,16 +378,21 @@ class DatabaseManager():
             }
         return configs
 
+    def get_user_data(self, username):
+        user = self.get_user(username)
+        data = {
+                'username': user.username,
+                'password': '***',
+                'contact_person': user.contact_person,
+                'contact_email': user.contact_email,
+                'id': user.id
+        }
+        return data
+
     def get_all_user_data(self):
         users = []
-        for user in self.session.query(User).all():
-            data_entry = {
-                    'username': user.username,
-                    'password': '***',
-                    'contact_person': user.contact_person,
-                    'contact_email': user.contact_email
-            }
-            users.append(data_entry)
+        for username, in self.session.query(User.username).all():
+            users.append(self.get_user_data(username))
         return users
 
     def get_user(self, username):

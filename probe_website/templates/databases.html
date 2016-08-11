@@ -9,11 +9,6 @@
 <p class="lead">Here you add information about the database(s) the probes should send measurement data to.</p>
 <br/>
 
-{% if message is string and message != '' %}
-<p style="color:red;">{{ message }}</p>
-<br/>
-{% endif %}
-
 <form class="form-horizontal" method="POST">
 
   {% for db_type, db in dbs.items() %}

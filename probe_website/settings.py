@@ -8,14 +8,8 @@ ERROR_MESSAGE = {
         'invalid_mac': (
             'The supplied MAC address was not valid or is already in use. '
         ),
-        'invalid_scripts': (
-            'One or more of the script configurations are invalid.'
-        ),
-        'invalid_network_config': (
-            'One or more of the network configurations are invalid.'
-        ),
-        'invalid_database_settings': (
-            'One or more of the network configurations are invalid.'
+        'invalid_settings': (
+            'One or more of the configurations are invalid.'
         ),
         'invalid_certificate': (
             'The supplied certificate file is invalid, or something went wrong when uploading it.'
@@ -29,4 +23,4 @@ INFO_MESSAGE = {
         )
 }
 
-PROBE_ASSOCIATION_PERIOD = 60*60  # In seconds, i.e. one hour
+PROBE_ASSOCIATION_PERIOD = 20*60  # In seconds, i.e. 20*60 = 20 minutes

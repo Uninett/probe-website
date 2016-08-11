@@ -20,8 +20,10 @@
             <th>Name</th>
             <th>MAC address</th>
             <th>Location</th>
+            {% if probes|length > 0 %}
             <th colspan="2">Probe status</th>
             <th>Update status</th>
+            {% endif %}
             <th colspan="2">Actions</th>
           </tr>
         </thead>
@@ -44,6 +46,7 @@
                 {% endif %}
               </form>
             </td>
+            {% if probes|length > 0 %}
             <td>
               {% if probe.connected %}
               <p style="color:green;">Connected</p>
@@ -62,6 +65,7 @@
               <p>Not running</p>
               {% endif %}
             </td>
+            {% endif %}
             <td>
               <a href="{{ url_for('probe_setup', id=probe.id) }}">
                 <button type="button" class="btn btn-default" name="edit">Edit</button>

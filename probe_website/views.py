@@ -79,9 +79,12 @@ def databases():
             flash('Settings successfully saved', 'info')
         else:
             database.revert_changes()
-            flash(settings.ERROR_MESSAGE['invalid_database_settings'], 'error')
+            flash(settings.ERROR_MESSAGE['invalid_settings'], 'error')
 
-    return generate_databases_template(current_user.username)
+    db_info = database.get_database_info(current_user.username)
+
+    return render_template('databases.html',
+                           dbs=db_info)
 
 
 @app.route('/probes', methods=['GET', 'POST'])
@@ -204,8 +207,43 @@ def user_managment():
                     flash('User {} successfully removed'.format(username), 'info')
                 else:
                     database.revert_changes()
+        elif action == 'edit_user':
+            username = request.form.get('username', '')
+
 
     return render_template('user_managment.html', users=database.get_all_user_data())
+
+
+@app.route('/edit_user', methods=['GET', 'POST'])
+@flask_login.login_required
+def edit_user():
+    if not current_user.admin:
+        return abort(403)
+
+    username = request.args.get('username', '')
+    if username == '':
+        flash('No username specified')
+        abort(404)
+
+    user = database.get_user(username)
+    if user is None:
+        flash('Unknown username')
+        abort(404)
+
+    if request.method == 'POST':
+        successful = form_parsers.update_user(username)
+        if successful:
+            database.save_changes()
+            flash('Settings successfully saved', 'info')
+            return redirect(url_for('user_managment'))
+        else:
+            database.revert_changes()
+            flash(settings.ERROR_MESSAGE['invalid_settings'], 'error')
+
+    user_data = database.get_user_data(username)
+    return render_template('edit_user.html',
+                           user=user_data)
+
 
 # The following two views are used as an API for registering a new
 # probe, and are not meant to be accessed through a web browser
@@ -286,9 +324,3 @@ def generate_probe_setup_template(probe_id, username):
                            scripts=probe_data['scripts'],
                            network_configs=probe_data['network_configs'],
                            cert_data=cert_data)
-
-def generate_databases_template(username):
-    db_info = database.get_database_info(current_user.username)
-
-    return render_template('databases.html',
-                           dbs=db_info)

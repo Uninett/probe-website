@@ -104,11 +104,6 @@ def upload_certificate(probe_id, username):
             successful = False
             break
 
-    # # This is not a good idea, since the config won't be exported for default values
-    # if successful:
-    #     ansible.export_group_config(username,
-    #                                 {'cert_paths': cert_paths },
-    #                                 'cert_paths')
     return successful
 
 
@@ -164,4 +159,14 @@ def new_user():
     contact_email = request.form.get('contact_email', '')
 
     success = database.add_user(username, password, contact_person, contact_email)
+    return success
+
+
+def update_user(curr_username):
+    new_username = request.form.get('username', '')
+    password = request.form.get('password', '')
+    contact_person = request.form.get('contact_person', '')
+    contact_email = request.form.get('contact_email', '')
+
+    success = database.update_user(curr_username, new_username, password, contact_person, contact_email)
     return success
