@@ -3,67 +3,67 @@
 # This script customizes a kali linux ARM image by adding stuff like
 # the required driver, ssh keys, server location etc.
 
-USAGE="Usage: $0 
+USAGE="Usage: ${0} 
 <image file (.img)> 
 <wifi dongle driver (.ko)> 
 <web server address> 
 <(unprivileged) server user used for reverse ssh> 
 <main (privileged) user's public ssh key>"
 
-if [[ $# != 5 ]]; then
-    echo "$USAGE"
+if [[ ${#} != 5 ]]; then
+    echo "${USAGE}"
     exit
 fi
 
-if [[ "$EUID" != 0 ]]; then
+if [[ "${EUID}" != 0 ]]; then
     echo "[!] Script must be run as root"
     exit
 fi
 
-ORIG_FILENAME="$1"
-WIFI_DRIVER="$2"
-SERVER_ADDRESS="$3"
-SERVER_USER="$4"
-MAIN_PUBKEY="$5"
+ORIG_FILENAME="${1}"
+WIFI_DRIVER="${2}"
+SERVER_ADDRESS="${3}"
+SERVER_USER="${4}"
+MAIN_PUBKEY="${5}"
 
 
 echo "[~] Copying image..."
 FILENAME="modified_${ORIG_FILENAME}"
-cp "$ORIG_FILENAME" "$FILENAME"
+cp "${ORIG_FILENAME}" "${FILENAME}"
 echo "[+] Done"
 
 
 echo "[+] Getting image offset"
-sector_size=$(fdisk -lu "$FILENAME" | grep -oP '(?<=Sector size \(logical/physical\): )[0-9]{1,4}')
-fs_start=$(fdisk -lu "$FILENAME" | tail -n 1 | awk '{print $2}')
+sector_size=$(fdisk -lu "${FILENAME}" | grep -oP '(?<=Sector size \(logical/physical\): )[0-9]{1,4}')
+fs_start=$(fdisk -lu "${FILENAME}" | tail -n 1 | awk '{print $2}')
 offset=$((sector_size * fs_start))
 
 
-echo "[+] Making mount point $MOUNT_DIR"
+echo "[+] Making mount point ${MOUNT_DIR}"
 MOUNT_DIR="mnt/"
-if [[ ! -d "$MOUNT_DIR" ]]; then
-    mkdir "$MOUNT_DIR"
+if [[ ! -d "${MOUNT_DIR}" ]]; then
+    mkdir "${MOUNT_DIR}"
 fi
 
 
-echo "[+] Mounting image $FILENAME at $MOUNT_DIR"
-mount -o loop,offset=$offset "$FILENAME" "$MOUNT_DIR"
+echo "[+] Mounting image ${FILENAME} at ${MOUNT_DIR}"
+mount -o loop,offset=${offset} "${FILENAME}" "${MOUNT_DIR}"
 
 echo "[+] Transferring init script & pub ssh key"
 mkdir -p "${MOUNT_DIR}/root/init/"
 cp "probe_init.sh" "${MOUNT_DIR}/root/init/probe_init.sh"
 chmod +x "${MOUNT_DIR}/root/init/probe_init.sh"
-cp "$MAIN_PUBKEY" "${MOUNT_DIR}/root/init/main_key.pub"
+cp "${MAIN_PUBKEY}" "${MOUNT_DIR}/root/init/main_key.pub"
 
 
 echo "[+] Transferring server host key (for known_hosts)"
 # Remove port part
-server_host=$(echo "$SERVER_ADDRESS" | sed 's/:.*//g')
+server_host=$(echo "${SERVER_ADDRESS}" | sed 's/:.*//g')
 ssh-keyscan -t rsa localhost | sed "s/localhost/${server_host}/g" > "${MOUNT_DIR}/root/init/host_key"
 
 
 echo "[+] Transferring wifi driver"
-cp "$WIFI_DRIVER" "8812au.ko"
+cp "${WIFI_DRIVER}" "8812au.ko"
 mv "8812au.ko" ${MOUNT_DIR}/lib/modules/*/kernel/drivers/net/wireless/
 if [[ $(grep '8812au' ${MOUNT_DIR}/etc/modules) == "" ]]; then
     echo "8812au" >> "${MOUNT_DIR}/etc/modules"
@@ -71,9 +71,11 @@ fi
 
 
 echo "[+] Generating systemd unit file for init script"
-echo "
+cat << EOF > ${MOUNT_DIR}/etc/systemd/system/probe_init.service
 [Unit]
 Description=Probe init script
+Wants=network-online.target
+After=network.target network-online.target
 
 [Service]
 Type=simple
@@ -82,7 +84,8 @@ Restart=on-failure
 RestartSec=30
 
 [Install]
-WantedBy=multi-user.target" > ${MOUNT_DIR}/etc/systemd/system/probe_init.service
+WantedBy=multi-user.target
+EOF
 
 # This is the same as 'systemctl enable reverse_ssh', just that we don't need
 # to run systemctl (we aren't running chroot)
@@ -103,9 +106,8 @@ ID_VENDOR_ID=2001
 echo 'ACTION=="remove", ENV{ID_VENDOR_ID}=="'"${ID_VENDOR_ID}"'", ENV{ID_MODEL_ID}=="'"${ID_MODEL_ID}"'", RUN+="/sbin/shutdown -h now"' > ${MOUNT_DIR}/etc/udev/rules.d/00-dongle_shutdown.rules
 
 
-# Unmount the image
 echo "[+] Unmounting image"
-sudo umount "$MOUNT_DIR"
+umount "${MOUNT_DIR}"
 
 
 echo "Done!"
