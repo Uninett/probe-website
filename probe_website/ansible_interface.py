@@ -5,9 +5,7 @@ from os import makedirs
 import shutil
 from subprocess import Popen
 import re
-
-
-ANSIBLE_PID = 0
+from flask import flash
 
 
 def load_default_config(username, config_name):
@@ -132,11 +130,18 @@ def get_certificate_data(username, probe_id):
 
 
 def run_ansible_playbook(username):
+    inventory = os.path.join(settings.ANSIBLE_PATH, 'inventory', username)
     command = ['ansible-playbook',
-               '-i', os.path.join(settings.ANSIBLE_PATH, 'inventory', username),
+               '-i', inventory,
                os.path.join(settings.ANSIBLE_PATH, 'probe.yml'),
                '--vault-password-file', os.path.join(settings.ANSIBLE_PATH, 'vault_pass.txt'),
                "--ssh-common-args='-o UserKnownHostsFile={}/known_hosts'".format(settings.ANSIBLE_PATH)]
+
+    with open(inventory, 'r') as f:
+        # Do not run Ansible if the inventory file is empty
+        # (the first line will be the username)
+        if len(f.readlines()) <= 1:
+            return
 
     dir_path = os.path.join(settings.ANSIBLE_PATH, 'logs')
     if not os.path.exists(dir_path):
@@ -148,9 +153,7 @@ def run_ansible_playbook(username):
     # be logged to the log_file, so to check the status of the command,
     # just check that file (if the 'PLAY RECAP' string is in the log,
     # the command has been completed)
-    proc = Popen(command, stdout=log_file)
-    global ANSIBLE_PID
-    ANSIBLE_PID = proc.pid
+    Popen(command, stdout=log_file)
 
 
 # Reads the log from running the ansible-playbook command (done in func
@@ -167,9 +170,7 @@ def get_playbook_status(username):
 
     with open(log_file, 'r') as f:
         cont = f.read()
-        if ANSIBLE_PID == 0:
-            return None
-        elif 'PLAY RECAP' not in cont:
+        if 'PLAY RECAP' not in cont:
             return 'running'
         elif 'PLAY RECAP' in cont:
             # Matches lines like this, and extracts the numbers:
@@ -180,8 +181,7 @@ def get_playbook_status(username):
             for key, value in status.items():
                 status[key] = 'succeeded' if value == 0 else 'failed'
 
-            global ANSIBLE_PID
-            ANSIBLE_PID = 0
+            flash(settings.INFO_MESSAGE['shutdown_warning'], 'info')
             return status
 
-        return None
+    return None

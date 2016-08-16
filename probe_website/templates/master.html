@@ -70,7 +70,7 @@
           {% if messages %}
             <br>
             {% for category, message in messages %}
-            <p {% if category == 'error' %}style="color:red;"{% endif %}>{{ message }}</p>
+            <p {% if category == 'error' %}style="color:red;"{% endif %}>{{ message|safe }}</p>
             {% endfor %}
           {% endif %}
         {% endwith %}

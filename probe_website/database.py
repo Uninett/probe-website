@@ -446,6 +446,33 @@ class DatabaseManager():
     def revert_changes(self):
         self.session.rollback()
 
+    def valid_network_configs(self, probe):
+        success = True
+        for net_conf in probe.network_configs:
+            # For now we just check for any (not two_g & and five_g), because
+            # we don't use the two_g and five_g at the moment
+            if (net_conf.name == 'any' and
+                    not net_conf.is_filled() and
+                    probe.associated and
+                    util.is_probe_connected(probe.port)):
+                message = settings.ERROR_MESSAGE['fill_out_network_credentials'].format(
+                    str(probe.name) + ' / ' + util.convert_mac(probe.custom_id, mode='display'))
+                flash(message, 'error')
+                success = False
+        return success
+
+    def valid_database_configs(self, user):
+        success = True
+        for db_conf in user.databases:
+            # For now, just make sure everything is filled out (in the future, with
+            # more than one db, maybe check that at least one is filled out)
+            if not db_conf.is_filled():
+                message = settings.ERROR_MESSAGE['fill_out_database_credentials']
+                flash(message, 'error')
+                success = False
+        return success
+
+
     def generate_probe_port(self):
         base_port = 50000
         max_port = 65000

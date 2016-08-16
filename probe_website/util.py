@@ -1,6 +1,7 @@
 from re import fullmatch
 from probe_website import settings
 from subprocess import call
+from os import kill
 
 
 def is_mac_valid(mac):
@@ -93,3 +94,10 @@ def is_probe_connected(port):
     ret_code = call(command)
 
     return True if ret_code == 0 else False
+
+
+def strip_id(data):
+    for entry in data:
+        if 'id' in entry:
+            del entry['id']
+    return data

@@ -63,7 +63,7 @@ def logout():
 @app.route('/download_image', methods=['GET'])
 @flask_login.login_required
 def download_image():
-    return render_template('download_image.html')
+    return render_template('download_image.html', image_file=settings.RELATIVE_IMAGE_PATH)
 
 
 @app.route('/databases', methods=['GET', 'POST'])
@@ -114,23 +114,20 @@ def probes():
                 # Export the script configs in the sql database to ansible readable configs
                 user = database.get_user(current_user.username)
                 for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
+                    data = util.strip_id(database.get_script_data(probe))
                     ansible.export_host_config(probe.custom_id,
-                                               {'host_script_configs': database.get_script_data(probe)},
+                                               {'host_script_configs': data},
                                                'script_configs')
-                    for net_conf in probe.network_configs:
-                        # For now we just check for any (not two_g & and five_g), because
-                        # we don't use the two_g and five_g at the moment
-                        if (net_conf.name == 'any' and
-                                not net_conf.is_filled() and
-                                probe.associated and
-                                util.is_probe_connected(probe.port)):
-                            message = settings.ERROR_MESSAGE['fill_out_network_credentials'].format(
-                                str(probe.name) + ' / ' + util.convert_mac(probe.custom_id, mode='display'))
-                            flash(message, 'error')
-                            return redirect(url_for('probes'))
 
+                    if (not probe.associated or
+                            not util.is_probe_connected(probe.port) or
+                            not database.valid_network_configs(probe) or
+                            not database.valid_database_configs(user)):
+                        return redirect(url_for('probes'))
+
+                    data = util.strip_id(database.get_network_config_data(probe))
                     ansible.export_host_config(probe.custom_id,
-                                               {'networks': database.get_network_config_data(probe)},
+                                               {'networks': data},
                                                'network_configs')
                 ansible.export_to_inventory(current_user.username, database)
                 ansible.export_known_hosts(database)

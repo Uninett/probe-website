@@ -100,7 +100,7 @@ class Script(Base):
         self.minute_interval = minute_interval
         self.enabled = enabled
         self.required = required
-        
+
     def __repr__(self):
         return ('id={},description={},filename={},args={},minute_interval={},enabled={},required={},'
                 'probe_id={}'.format(self.id, self.description, self.filename, self.args,
@@ -158,3 +158,13 @@ class Database(Base):
         self.port = port
         self.username = username
         self.password = password
+
+    def is_filled(self):
+        def filled(x):
+            return x is not None and x != ''
+        return (filled(self.db_name) and
+                filled(self.db_type) and
+                filled(self.address) and
+                filled(self.port) and
+                filled(self.username) and
+                filled(self.password))
