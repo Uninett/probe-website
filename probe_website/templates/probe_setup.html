@@ -17,14 +17,14 @@
   <button type="submit" class="btn btn-lg btn-default" name="action" value="save_as_default">Save configuration as default</button>
   <div id="extra_configs">
     <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-      <li class="active"><a href="#basic" data-toggle="tab">Basic info</a></li>
+      <li><a href="#basic" data-toggle="tab">Basic info</a></li>
       <li><a href="#scripts" data-toggle="tab">Test scripts</a></li>
-      <li><a href="#network" data-toggle="tab">Network</a></li>
+      <li class="active"><a href="#network" data-toggle="tab">Network</a></li>
     </ul>
     <div id="tab_content" class="tab-content">
 
       <!-- Basic info -->
-      <div id="basic" class="tab-pane active">
+      <div id="basic" class="tab-pane">
         <h2>Basic info</h2>
         <p>The MAC address is needed for initialization, and the rest is for easier probe identification.</p><br/>
         <div class="form-horizontal">
@@ -90,7 +90,7 @@
       </div>
 
       <!-- Network configuration -->
-      <div id="network" class="tab-pane">
+      <div id="network" class="tab-pane active">
         <h2>Network configuration</h2>
         <p>Fill out information and credentials of the network(s) the probe should be connected to when doing measurements.</p><br/>
         <div class="form-horizontal">
