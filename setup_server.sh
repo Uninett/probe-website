@@ -7,24 +7,27 @@
 # (i.e. both a web server and and Ansible server). It is assumed to be
 # running a Debian based distro.
 
-USAGE="Usage: ${0}
-<full path to preferred sql db location (without the filename itself)>"
+# USAGE="Usage: ${0}"
 
-if [[ ${#} != 1 ]]; then
-    echo "${USAGE}"
-    exit
-fi
+# if [[ ${#} != 1 ]]; then
+#     echo "${USAGE}"
+#     exit
+# fi
 
 if [[ "${EUID}" != 0 ]]; then
     echo "[!] Script must be run as root"
     exit
 fi
 
-DB_PATH="${1}"
 
 echo '[+] Installing required programs'
-# NB: Must have ansible 2.x (I think...)
+# NB: Must have ansible 2.x
 apt-get install python3 python3-pip ansible netcat
+
+# These programs are required for the python cryptography module to compile
+# (when installed with pip)
+apt-get install build-essential libssl-dev libffi-dev python-dev
+
 pip3 install -r requirements.txt
 
 
@@ -66,8 +69,14 @@ EOF
 fi
 
 
+CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+
 # The get_probe_keys.sh script needs to know where the db is located, so
 # it can query it.
 echo '[+] Make file with location of sql db location'
 mkdir /etc/wifi_probing
-echo "${DB_PATH}/database.db" > /etc/wifi_probing/db_path.txt
+echo "${CURR_DIR}/database.db" > /etc/wifi_probing/db_path.txt
+
+
+echo '[+] Add web site path to python settings'
+sed -i "s|ADD_PROJECT_PATH_HERE|${CURR_DIR}|g" "${CURR_DIR}/probe_website/settings.py"

@@ -1,7 +1,9 @@
-ANSIBLE_PATH = '/home/frestr/Ansible/wifi_probe/'
-DATABASE_PATH = '/home/frestr/Projects/probe_website/database.db'
+ROOT_DIR = 'ADD_PROJECT_PATH_HERE'
 
-CERTIFICATE_DIR = '/home/frestr/Ansible/wifi_probe/certs/'
+ANSIBLE_PATH = ROOT_DIR + '/ansible-probes/'
+DATABASE_PATH = ROOT_DIR + '/database.db'
+
+CERTIFICATE_DIR = ROOT_DIR + '/ansible-probes/certs/'
 ALLOWED_CERT_EXTENSIONS = set(['cer', 'cert', 'ca', 'pem'])
 
 ERROR_MESSAGE = {

@@ -1,0 +1,3 @@
+[submodule "ansible-probes"]
+	path = ansible-probes
+	url = git@scm.uninett.no:maalepaaler/ansible-probes.git
