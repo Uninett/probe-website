@@ -14,7 +14,9 @@ from probe_website.models import Probe, Script, NetworkConfig, Database, User
 
 
 class DatabaseManager():
+    """Class managing pretty much all queries to the SQL database"""
     def __init__(self, database_path):
+        """Set up SQL Alchemy with the database at 'database_path'"""
         self.engine = create_engine('sqlite:///' + database_path, convert_unicode=True)
         self.session = scoped_session(sessionmaker(autocommit=False,
                                                    autoflush=False,
@@ -31,6 +33,7 @@ class DatabaseManager():
             self.add_user('admin', 'admin', 'admin', 'admin', True)
 
     def setup_relationships(self):
+        """Set up the relations between the different SQL tables"""
         Probe.scripts = relationship('Script',
                                      order_by=Script.id,
                                      back_populates='probe',
@@ -52,9 +55,11 @@ class DatabaseManager():
                                       cascade='all, delete, delete-orphan')
 
     def shutdown_session(self):
+        """Close the database"""
         self.session.remove()
 
     def add_user(self, username, password, contact_person, contact_email, admin=False):
+        """Add a new user to the database"""
         if len(self.session.query(User).filter(User.username == username).all()) != 0:
             return False
 
@@ -65,11 +70,8 @@ class DatabaseManager():
         return True
 
     def add_probe(self, username, probe_name, custom_id, location=None, scripts=None, network_configs=None):
-        ''' 
-        Creates a probe instance, adds it to the database session, and returns
-        it to the caller
-        '''
-
+        """Create a probe instance, add it to the database session, and return
+        it to the caller"""
         if not self.is_valid_id(custom_id):
             return None
 
@@ -93,23 +95,32 @@ class DatabaseManager():
         return probe
 
     def add_script(self, probe, description, filename, args, minute_interval, enabled, required):
+        """Add a new script"""
         script = Script(description, filename, args, minute_interval, enabled, required)
         probe.scripts.append(script)
 
     def add_network_config(self, probe, name, ssid, anonymous_id, username, password):
+        """Add a new network config"""
         config = NetworkConfig(name, ssid, anonymous_id, username, password)
         probe.network_configs.append(config)
 
     def add_database(self, user, db_type, name, address, port, username, password):
+        """Add a new database for 'user' (NB: This is NOT a SQL database, but rather the
+        credentials for the database the probe will send data to (like InfluxDB))"""
         # Need to take user into account here
         db = Database(name, db_type, address, port, username, password)
         user.databases.append(db)
 
     def add_default_databases(self, user):
+        """Add InfluxDB as a a default database for 'user'"""
         self.add_database(user, 'influxdb', '', '', '', '', '')
 
     def load_default_scripts(self, probe, username):
+        """Load default scripts for probe from Ansible configs. The default
+        scripts will either be the defaults for 'username' if any defaults
+        have been set, or the global defaults if no such defaults exist"""
         configs = ansible.load_default_config(username, 'script_configs')
+
         if 'default_script_configs' in configs:
             configs = configs['default_script_configs']
         elif 'group_script_configs' in configs:
@@ -131,6 +142,9 @@ class DatabaseManager():
                             script['enabled'], required)
 
     def load_default_network_configs(self, probe, username):
+        """Load default network configs for probe. If defaults for 'username'
+        exists, they will be used. Otherwise, add empty entries for any,
+        2.4GHz & 5GHz"""
         configs = ansible.load_default_config(username, 'network_configs')
         ansible.load_default_certificate(username, probe.custom_id)
 
@@ -144,6 +158,8 @@ class DatabaseManager():
             self.add_network_config(probe, 'any', '', '', '', '')
 
     def is_valid_id(self, probe_id):
+        """Return true if 'probe_id' is a valid MAC address for use as a
+        probe id."""
         if not self.is_valid_string(probe_id):
             return False
         if not util.is_mac_valid(probe_id):
@@ -155,9 +171,11 @@ class DatabaseManager():
         return is_unused
 
     def is_valid_string(self, entry):
+        """Return true if 'entry' is of type str and non-empty"""
         return type(entry) is str and entry != ''
 
     def update_probe(self, current_probe_id, name=None, new_custom_id=None, location=None):
+        """Update 'current_probe_id' with new attributes"""
         probe = self.get_probe(current_probe_id)
         if probe is None:
             return False
@@ -179,6 +197,7 @@ class DatabaseManager():
 
     def update_script(self, probe, script_id, name=None, script_file=None,
                       args=None, minute_interval=None, enabled=None):
+        """Update 'probe's 'script_id' with new attributes"""
         if probe is None:
             return False
 
@@ -192,7 +211,7 @@ class DatabaseManager():
             script.script_file = script_file
         if self.is_valid_string(args):
             script.args = args
-        
+
         # This whole checking should be redone (both for this method and for update_probe)
         try:
             int(minute_interval)
@@ -216,6 +235,7 @@ class DatabaseManager():
 
     def update_network_config(self, probe, config_id, ssid=None,
                               anonymous_id=None, username=None, password=None):
+        """Update 'probe's 'config_id' with new attributes"""
         if probe is None:
             return False
 
@@ -231,10 +251,11 @@ class DatabaseManager():
             config.username = username
         if self.is_valid_string(password):
             config.password = password
-            
+
         return True
 
     def update_database(self, user, db_id, db_name=None, address=None, port=None, username=None, password=None):
+        """Update 'user's 'db_id' with new attributes"""
         if user is None:
             return False
 
@@ -257,6 +278,7 @@ class DatabaseManager():
 
     def update_user(self, current_username, new_username=None, password=None,
                     contact_person=None, contact_email=None):
+        """Update 'current_username' with new attributes"""
         user = self.get_user(current_username)
         if user is None:
             return False
@@ -272,13 +294,15 @@ class DatabaseManager():
 
         return True
 
-    # This method should only return probes associated with the specified
-    # username, but atm support for different users aren't implemented, so
-    # just return everything
-
     # This method also just returns the basic info, not info about each
     # probe's script configs etc.
     def get_all_probes_data(self, username):
+        """Return a list of dictionaries with data about all probes of 'username'.
+
+        The data listed for each probe is the same as the data returned from
+        get_probe_data (see function below), with the exception of the script
+        and network configs;
+        """
         all_data = []
         user = self.get_user(username)
 
@@ -291,7 +315,7 @@ class DatabaseManager():
                     data_entry['ansible_status'] = ansible_status[probe.custom_id]
                 except:
                     data_entry['ansible_status'] = ''
-            elif (ansible_status is None or 
+            elif (ansible_status is None or
                     not util.is_probe_connected(probe.port) or
                     type(ansible_status) != str):
                 data_entry['ansible_status'] = ''
@@ -306,6 +330,7 @@ class DatabaseManager():
         return all_data
 
     def get_probe_data(self, probe_id):
+        """Return a dictionary containing all saved data about 'probe_id'"""
         probe = self.get_probe(probe_id)
         data = {
                 'name': probe.name,
@@ -320,6 +345,7 @@ class DatabaseManager():
         return data
 
     def get_script_data(self, probe):
+        """Return a dictionary containing all script configs of 'probe'"""
         scripts = []
         for script in probe.scripts:
             data_entry = {
@@ -336,6 +362,7 @@ class DatabaseManager():
 
     def get_network_config_data(self, probe):
         configs = {'two_g': '', 'five_g': '', 'any': ''}
+        """Return a dictionary containing all network configs of 'probe'"""
         for config in probe.network_configs:
             if config.name in configs:
                 configs[config.name] = {
@@ -357,6 +384,7 @@ class DatabaseManager():
         return configs
 
     def get_database_info(self, user):
+        """Return a dictionary containing all database configs of 'user'"""
         if type(user) is str:
             user = self.get_user(user)
             if user is None:
@@ -379,6 +407,7 @@ class DatabaseManager():
         return configs
 
     def get_user_data(self, username):
+        """Return a dictionary containing all data about 'username'"""
         user = self.get_user(username)
         data = {
                 'username': user.username,
@@ -390,28 +419,36 @@ class DatabaseManager():
         return data
 
     def get_all_user_data(self):
+        """Return a list containing data about all users"""
         users = []
         for username, in self.session.query(User.username).all():
             users.append(self.get_user_data(username))
         return users
 
     def get_user(self, username):
+        """Return the User class instance with the username 'username'"""
         return self.session.query(User).filter(User.username == username).first()
 
     def get_probe(self, probe_id):
+        """Return the Probe class instance with the custom_id/MAC 'probe_id'"""
         probe_id = util.convert_mac(probe_id, mode='storage')
         return self.session.query(Probe).filter(Probe.custom_id == probe_id).first()
 
     def get_script(self, probe, script_id):
+        """Return the Script class instance with the id 'probe_id' and relation to 'probe'"""
         return self.session.query(Script).filter(Script.probe_id == probe.id, Script.id == script_id).first()
 
     def get_network_config(self, probe, config_id):
+        """Return the NetworkConfig class instance with the id 'config_id' and relation to 'probe'"""
         return self.session.query(NetworkConfig).filter(NetworkConfig.probe_id == probe.id, NetworkConfig.id == config_id).first()
 
     def get_database(self, user, db_id):
+        """Return the Database class instance with the id 'db_id' and relation to 'user'"""
         return self.session.query(Database).filter(Database.user_id == user.id, Database.id == db_id).first()
 
     def remove_probe(self, username, probe_custom_id):
+        """Remove the probe with id 'probe_custom_id', as long as it belongs
+        to 'username'"""
         probe = self.get_probe(probe_custom_id)
         if probe is None or self.get_user(username).id != probe.user_id:
             flash('Invalid probe ID', 'error')
@@ -425,6 +462,8 @@ class DatabaseManager():
         return True
 
     def remove_user(self, username):
+        """Remove the user with username 'username', and with it all it's saved
+        probes and database configs."""
         user = self.get_user(username)
         if user is None:
             flash('Attempted to remove invalid username', 'error')
@@ -441,20 +480,20 @@ class DatabaseManager():
         return True
 
     def save_changes(self):
+        """Save database changes persistently to SQL database"""
         self.session.commit()
 
     def revert_changes(self):
+        """Revert database back to how it was at last save"""
         self.session.rollback()
 
     def valid_network_configs(self, probe):
+        """Returns true if 'probe's network config(s) has been filled out"""
         success = True
         for net_conf in probe.network_configs:
             # For now we just check for any (not two_g & and five_g), because
             # we don't use the two_g and five_g at the moment
-            if (net_conf.name == 'any' and
-                    not net_conf.is_filled() and
-                    probe.associated and
-                    util.is_probe_connected(probe.port)):
+            if net_conf.name == 'any' and not net_conf.is_filled():
                 message = settings.ERROR_MESSAGE['fill_out_network_credentials'].format(
                     str(probe.name) + ' / ' + util.convert_mac(probe.custom_id, mode='display'))
                 flash(message, 'error')
@@ -462,6 +501,7 @@ class DatabaseManager():
         return success
 
     def valid_database_configs(self, user):
+        """Returns true if 'user's database config(s) has been filled out"""
         success = True
         for db_conf in user.databases:
             # For now, just make sure everything is filled out (in the future, with
@@ -472,8 +512,8 @@ class DatabaseManager():
                 success = False
         return success
 
-
     def generate_probe_port(self):
+        """Return an available port for SSH tunnel."""
         base_port = 50000
         max_port = 65000
 
@@ -485,9 +525,3 @@ class DatabaseManager():
             elif base_port + i > max_port:
                 return -1
             i += 1
-
-    def __repr__(self):
-        string = ''
-        for probe in self.session.query(Probe).order_by(Probe.id):
-            string += str(probe) + '\n'
-        return string

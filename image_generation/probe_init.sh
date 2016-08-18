@@ -1,6 +1,18 @@
 #!/bin/bash
 
 # This script should be run once (and as root), when the probe boots up for the first time
+# It does the following things:
+#    - Activate WiFi driver
+#    - Install curl & autossh
+#    - Generate SSH key pair
+#    - Gather wlan0 MAC address
+#    - Register pub SSH key with server (identify with MAC)
+#    - If registration successful, receive a port number
+#    - Generate an autossh command (rev. SSH) with the received port, and 
+#      wrap it in a systemd unit file
+#    - Initiate SSH tunnel to dummy user on server and idle (the tunnel
+#      will be degenerate -> /bin/false as shell)
+
 
 USAGE="${0} <web/ansible server adress> <(unprivileged) user on server used for reverse SSH>"
 
@@ -24,11 +36,15 @@ modprobe 8812au
 
 
 echo "[+] Installing necessary programs"
+# To avoid being presented with stuff like ncurses dialogs, that
+# will halt the installation
 export DEBIAN_FRONTEND=noninteractive
 
 # DO NOT continue if this doesn't update properly. It will cause
 # dependency issues with curl!!!
-apt-get update
+if [[ ! $(apt-get update) ]]; then
+    exit 1
+fi
 
 apt-get --yes --allow-unauthenticated install autossh curl
 
@@ -97,9 +113,8 @@ while true; do
 done
 
 
-# echo "[+] Adding autossh cmd to crontab"
 echo "[+] Generating autossh systemd unit file & enabling it"
-# Separate host & port (line in 192.168.0.1:12345)
+# Separate host & port (for address like 192.168.0.1:12345)
 server_host=$(echo "${SERVER_ADDRESS}" | sed 's/:.*//g')
 autossh_cmd="autossh -M 0 -N -T -R${ssh_port}:localhost:22 ${SERVER_USER}@${server_host}"
 

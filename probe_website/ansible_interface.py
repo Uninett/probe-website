@@ -9,6 +9,8 @@ from flask import flash
 
 
 def load_default_config(username, config_name):
+    """Use 'username' and 'config_name' to locate and load a default YAML
+    config file (used for Ansible)"""
     filename = os.path.join(settings.ANSIBLE_PATH, 'group_vars', username, config_name)
     # Change to global default if there is no group default
     if not os.path.isfile(filename):
@@ -24,11 +26,15 @@ def load_default_config(username, config_name):
 
 # Data is a normal python data structure consisting of lists & dicts
 def export_group_config(username, data, filename):
+    """Export 'data' as a user specific YAML config file under the name
+    'filename' for the user 'username'"""
     dir_path = os.path.join(settings.ANSIBLE_PATH, 'group_vars', username)
     _write_config(dir_path, data, filename)
 
 
 def export_host_config(probe_id, data, filename):
+    """Export 'data' as a host/probe specific YAML config file under the name
+    'filename' for the probe with 'probe_id' as custom id (a MAC)"""
     probe_id = util.convert_mac(probe_id, mode='storage')
     dir_path = os.path.join(settings.ANSIBLE_PATH, 'host_vars', probe_id)
     _write_config(dir_path, data, filename)
@@ -36,6 +42,14 @@ def export_host_config(probe_id, data, filename):
 
 # Make a hosts file for this user at <ansible_root>/inventories/username/hosts
 def export_to_inventory(username, database):
+    """Export an Ansible hosts file for 'username' at
+    <ansible_root>/inventory/<username> from the supplied SQL database
+
+    Each inventory entry will be in the following format:
+    [<username>]
+    <mac> ansible_host=localhost ansible_port=<port> probe_name=<name>
+    ...
+    """
     from probe_website.database import Probe
 
     dir_path = os.path.join(settings.ANSIBLE_PATH, 'inventory')
@@ -55,6 +69,12 @@ def export_to_inventory(username, database):
 
 
 def export_known_hosts(database):
+    """Export a known_hosts file from the host keys in 'database', for use
+    with SSH when Ansible pushes configs
+
+    Each entry will be in the format:
+    [localhost]:<port> <host key>
+    """
     from probe_website.database import Probe
 
     path = os.path.join(settings.ANSIBLE_PATH, 'known_hosts')
@@ -67,6 +87,7 @@ def export_known_hosts(database):
 
 
 def remove_host_config(probe_id):
+    """Remove all Ansible configs associated with 'probe_id'"""
     probe_id = util.convert_mac(probe_id, mode='storage')
     dir_path = os.path.join(settings.ANSIBLE_PATH, 'host_vars', probe_id)
     if os.path.isdir(dir_path):
@@ -74,6 +95,8 @@ def remove_host_config(probe_id):
 
 
 def _write_config(dir_path, data, filename):
+    """Write the python data structure 'data' as a YAML config to the
+    file 'filename', located at 'dir_path'"""
     if not os.path.exists(dir_path):
         makedirs(dir_path)
 
@@ -83,6 +106,8 @@ def _write_config(dir_path, data, filename):
 
 
 def make_certificate_default(probe_id, username):
+    """Make 'probe_id's uploaded wpa_supplicant certificate the default one for any
+    new probes added by 'username'"""
     src = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id)
     dst = os.path.join(app.config['UPLOAD_FOLDER'], 'group_certs', username)
 
@@ -93,6 +118,7 @@ def make_certificate_default(probe_id, username):
 
 
 def load_default_certificate(username, probe_id):
+    """Load 'username's default wpa_supplicant certificate"""
     src = os.path.join(app.config['UPLOAD_FOLDER'], 'group_certs', username)
     dst = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id)
 
@@ -105,12 +131,15 @@ def load_default_certificate(username, probe_id):
 
 
 def remove_host_cert(probe_id):
+    """Remove 'probe_id's wpa_supplicant certificate"""
     path = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id)
     if os.path.exists(path):
         shutil.rmtree(path)
 
 
 def get_certificate_data(username, probe_id):
+    """Return a dictionary containing the filenames of the uploaded certificates,
+    for any, 2.4GHz and 5 GHz, respectively"""
     data = {'any': '', 'two_g': '', 'five_g': ''}
     src = os.path.join(app.config['UPLOAD_FOLDER'], 'host_certs', probe_id)
     if not os.path.exists(src):
@@ -130,6 +159,10 @@ def get_certificate_data(username, probe_id):
 
 
 def run_ansible_playbook(username):
+    """Start an Ansible instance as subprocess with 'username's configs
+
+    Pipe all output from the Ansible process to a separate logfile
+    """
     inventory = os.path.join(settings.ANSIBLE_PATH, 'inventory', username)
     command = ['ansible-playbook',
                '-i', inventory,
@@ -156,14 +189,15 @@ def run_ansible_playbook(username):
     Popen(command, stdout=log_file)
 
 
-# Reads the log from running the ansible-playbook command (done in func
-# run_ansible_playbook), and returns:
-#   * Not started (no log file or empty):       None
-#   * Unfinished (No 'PLAY RECAP' in log file): 'running'
-#   * Finished ('PLAY RECAP' in log file):      dictionary of each probe's state, like:
-#       status = {'123456abcdef': 'succeeded',
-#                 'abcdef123456': 'failed'}
 def get_playbook_status(username):
+    """Read the log from running the ansible-playbook command (done in func
+    run_ansible_playbook), and return:
+      * Not started (no log file or empty):        None
+      * Unfinished (No 'PLAY RECAP' in log file):  'running'
+      * Finished ('PLAY RECAP' in log file):       dictionary of each probe's state, like:
+                                                   status = {'123456abcdef': 'succeeded'
+                                                             'abcdef123456': 'failed'}
+    """
     log_file = os.path.join(settings.ANSIBLE_PATH, 'logs', username)
     if not os.path.isfile(log_file):
         return None
@@ -174,14 +208,14 @@ def get_playbook_status(username):
             return 'running'
         elif 'PLAY RECAP' in cont:
             # Matches lines like this, and extracts the numbers:
-            # '12af4521deee               : ok=0    changed=0    unreachable=1    failed=0' 
+            # '12af4521deee               : ok=0    changed=0    unreachable=1    failed=0'
             regex = '([a-zA-Z0-9_-]+)\s+:\s+ok=([0-9]+)+\s+changed=([0-9]+)\s+unreachable=([0-9]+)+\s+failed=([0-9]+)+'
             probes = re.findall(regex, cont)
             status = {name: int(unreachable)+int(failed) for name, ok, changed, unreachable, failed in probes}
             for key, value in status.items():
                 status[key] = 'succeeded' if value == 0 else 'failed'
 
-            flash(settings.INFO_MESSAGE['shutdown_warning'], 'info')
+            # flash(settings.INFO_MESSAGE['shutdown_warning'], 'info')
             return status
 
     return None

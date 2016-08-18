@@ -1,12 +1,21 @@
 #!/bin/bash
 
-# This script customizes a kali linux ARM image by adding stuff like
-# the required driver, ssh keys, server location etc.
+# This script customizes a generic Kali Linux ARM image for use for
+# wifi monitoring probes. The generated differs from the original one
+# by containing:
+#   - An init script that should be run at a probe's first boot
+#     (the init script makes the probe able to connect to the main server)
+#   - An enabled systemd unit file for the init script
+#   - The main server user's public ssh key and the server's host key
+#   - The server's hostname/address
+#   - WiFi driver (8812au)
+#   - udev script for shutting down probe when wifi dongle is yanked out
+
 
 USAGE="Usage: ${0} 
 <image file (.img)> 
 <wifi dongle driver (.ko)> 
-<web server address> 
+<web server address/hostname> 
 <(unprivileged) server user used for reverse ssh> 
 <main (privileged) user's public ssh key>"
 

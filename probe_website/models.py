@@ -7,6 +7,10 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
 from probe_website.settings import PROBE_ASSOCIATION_PERIOD
 
+# All classes in this module inherits from a SQL Alchemy class,
+# and defines how to database tables should look. They also function
+# as "normal" classes, so they are not used solely for SQL Alchemy
+
 
 class User(Base, UserMixin):
     __tablename__ = 'users'
@@ -124,7 +128,7 @@ class NetworkConfig(Base):
         self.anonymous_id = anonymous_id
         self.username = username
         self.password = password
-        
+
     def __repr__(self):
         return ('id={},name={},ssid={},anonymous_id={},username={}'.format(self.id,
                     self.name, self.ssid, self.anonymous_id, self.username))

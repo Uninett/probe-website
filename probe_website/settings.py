@@ -1,6 +1,5 @@
 ANSIBLE_PATH = '/home/frestr/Ansible/wifi_probe/'
 DATABASE_PATH = '/home/frestr/Projects/probe_website/database.db'
-RELATIVE_IMAGE_PATH = '../image_generation/modified_kali-1.1.2-rpi2.img'
 
 CERTIFICATE_DIR = '/home/frestr/Ansible/wifi_probe/certs/'
 ALLOWED_CERT_EXTENSIONS = set(['cer', 'cert', 'ca', 'pem'])

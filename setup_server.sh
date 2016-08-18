@@ -24,26 +24,29 @@ DB_PATH="${1}"
 
 echo '[+] Installing required programs'
 # NB: Must have ansible 2.x (I think...)
-apt-get install python3 nc python3-pip ansible
+apt-get install python3 python3-pip ansible netcat
 pip3 install -r requirements.txt
 
 
-echo '[+] Making dummy user for SSH tunneling'
-useradd -m dummy
-# echo -e "${DUMMY_PASS}\n${DUMMY_PASS}\n" | passwd dummy
+if [[ ! $(grep 'dummy' /etc/passwd) ]]; then
+    echo '[+] Making dummy user for SSH tunneling'
+    useradd -m dummy
+fi
 
 
-echo '[+] Generating SSH keys for dummy user'
-ssh-keygen -t rsa -b 4096 -f dummy_key -N ""
-mkdir /home/dummy/.ssh/
+if [[ ! -f /home/dummy/.ssh/id_rsa ]]; then
+    echo '[+] Generating SSH keys for dummy user'
+    ssh-keygen -t rsa -b 4096 -f dummy_key -N ""
+    mkdir /home/dummy/.ssh/
 
-sed -i 's/\w\+@/dummy@/g' dummy_key
-mv dummy_key /home/dummy/.ssh/id_rsa
-chown dummy /home/dummy/.ssh/id_rsa
+    sed -i 's/\w\+@/dummy@/g' dummy_key
+    mv dummy_key /home/dummy/.ssh/id_rsa
+    chown dummy /home/dummy/.ssh/id_rsa
 
-sed -i 's/\w\+@/dummy@/g' dummy_key.pub
-mv dummy_key.pub /home/dummy/.ssh/id_rsa.pub
-chown dummy /home/dummy/.ssh/id_rsa.pub
+    sed -i 's/\w\+@/dummy@/g' dummy_key.pub
+    mv dummy_key.pub /home/dummy/.ssh/id_rsa.pub
+    chown dummy /home/dummy/.ssh/id_rsa.pub
+fi
 
 
 echo '[+] Make sure root owns get_probe_keys.sh & copy it to proper location'
@@ -52,13 +55,15 @@ chmod +x get_probe_keys.sh
 cp get_probe_keys.sh /usr/bin/
 
 
-echo '[+] Adding sshd_config entry for dummy user'
+if [[ ! $(grep 'Match User dummy' /etc/ssh/sshd_config) ]]; then
+    echo '[+] Adding sshd_config entry for dummy user'
 cat << EOF >> /etc/ssh/sshd_config
 Match User dummy
     ForceCommand /bin/false
     AuthorizedKeysCommand /usr/bin/get_probe_keys.sh
     AuthorizedKeysCommandUser nobody
 EOF
+fi
 
 
 # The get_probe_keys.sh script needs to know where the db is located, so

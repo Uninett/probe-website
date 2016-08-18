@@ -11,13 +11,21 @@ import shutil
 database = None
 
 
-# This function MUST be called before any other functions in this module
 def set_database(new_database):
+    """Set the database local to this module equal to 'new_database'
+
+    NB: This function MUST be called before any other functions in this module
+    """
     global database
     database = new_database
 
 
 def update_scripts():
+    """Parse script config data from HTML POST form and update 'probe_id's scripts,
+    where 'probe_id' is the 'id' argument of the POST request.
+
+    Return true if successful
+    """
     probe_id = request.args.get('id', '')
     script_configs = util.parse_configs(request.form.items(), 'script')
     blank_config = {
@@ -43,6 +51,11 @@ def update_scripts():
 
 
 def update_network_configs():
+    """Parse network config data from HTML POST form and update 'probe_id's scripts,
+    where 'probe_id' is the 'id' argument of the POST request.
+
+    Return true if successful
+    """
     probe_id = request.args.get('id', '')
     network_configs = util.parse_configs(request.form.items(), 'network')
     blank_config = {
@@ -67,6 +80,12 @@ def update_network_configs():
 
 
 def upload_certificate(probe_id, username):
+    """Validate the uploaded certificate file and save it as
+    'probe_id's certificate
+
+    (It's the user that uploads the certificate, not the server)
+    Return true if successful
+    """
     certs = util.parse_configs(request.files.items(), 'network')
     probe = database.get_probe(probe_id)
     data = ansible_interface.get_certificate_data(username, probe_id)
@@ -108,6 +127,10 @@ def upload_certificate(probe_id, username):
 
 
 def update_probe(probe_id):
+    """Update 'probe_id' with the supplied data.
+
+    Return true if successful
+    """
     new_name = request.form.get('probe_name', '')
     new_probe_id = request.form.get('probe_id', '')
     new_location = request.form.get('probe_location', '')
@@ -117,6 +140,10 @@ def update_probe(probe_id):
 
 
 def update_databases(username):
+    """Update 'username's databases with supplied data.
+
+    Return true if successful
+    """
     configs = util.parse_configs(request.form.items(), 'database')
     user = database.get_user(username)
 
@@ -132,6 +159,10 @@ def update_databases(username):
 
 
 def new_probe(username):
+    """Add a new probe with the supplied data.
+
+    Return true if successful
+    """
     name = request.form.get('probe_name', '')
     probe_id = request.form.get('probe_id', '')
     location = request.form.get('probe_location', '')
@@ -153,6 +184,10 @@ def new_probe(username):
 
 
 def new_user():
+    """Add a new user with the supplied data.
+
+    Return true if successful
+    """
     username = request.form.get('username', '')
     password = request.form.get('password', '')
     contact_person = request.form.get('contact_person', '')
@@ -163,6 +198,10 @@ def new_user():
 
 
 def update_user(curr_username):
+    """Update 'curr_username' with new user data.
+
+    Return true if successful
+    """
     new_username = request.form.get('username', '')
     password = request.form.get('password', '')
     contact_person = request.form.get('contact_person', '')

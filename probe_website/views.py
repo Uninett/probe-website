@@ -16,6 +16,7 @@ login_manager.init_app(app)
 
 @login_manager.user_loader
 def user_loader(username):
+    """Return the User class instance with the username 'username'."""
     try:
         user = database.session.query(User).filter(User.username == username).first()
     except:
@@ -25,11 +26,14 @@ def user_loader(username):
 
 @app.teardown_appcontext
 def shutdown_database_session(exception=None):
+    """Close the database on application shutdown."""
     database.shutdown_session()
 
 
 @app.route('/')
 def index():
+    """Render home page if the user is authenticated.
+    Otherwise redirect to login page."""
     if flask_login.current_user.is_authenticated:
         return render_template('index.html')
     else:
@@ -38,6 +42,8 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    """Render login page for GET requests. Authenticate and redirect to homepage
+    for POST requests (if authentication was successful)."""
     if request.method == 'POST':
         username = request.form.get('username', '')
         password = request.form.get('password', '')
@@ -56,6 +62,7 @@ def login():
 @app.route('/logout')
 @flask_login.login_required
 def logout():
+    """Log current user out and redirect to login page."""
     flask_login.logout_user()
     return redirect(url_for('login'))
 
@@ -63,12 +70,15 @@ def logout():
 @app.route('/download_image', methods=['GET'])
 @flask_login.login_required
 def download_image():
-    return render_template('download_image.html', image_file=settings.RELATIVE_IMAGE_PATH)
+    """Render download image page."""
+    return render_template('download_image.html')
 
 
 @app.route('/databases', methods=['GET', 'POST'])
 @flask_login.login_required
 def databases():
+    """Render database page for GET. Also parse args and export Ansible
+    config for POST."""
     if request.method == 'POST':
         successful = form_parsers.update_databases(current_user.username)
         if successful:
@@ -90,6 +100,15 @@ def databases():
 @app.route('/probes', methods=['GET', 'POST'])
 @flask_login.login_required
 def probes():
+    """Render page for viewing all the user's probes. On POST: add,
+    update or remove a probe.
+
+    More specifically, the following can be done via POST:
+        - Add a new probe
+        - Remove a probe
+        - Renew a probe's association period (if not already associated)
+        - Push configurations to probes (i.e. run Ansible)
+    """
     if request.method == 'POST':
         action = request.form.get('action', '')
         if action == 'new_probe':
@@ -142,6 +161,14 @@ def probes():
 @app.route('/probe_setup', methods=['GET', 'POST'])
 @flask_login.login_required
 def probe_setup():
+    """Render page for adding/editing probe data. Also parse data
+    on POST.
+
+    More specifically, the data that can be changed are:
+        - Basic probe info (name, MAC and location)
+        - Script configurations (interval and enabled/disabled for each script)
+        - Network configration (SSID, anon id, username, password, cert)
+    """
     probe_id = request.args.get('id', '')
     if probe_id == '':
         flash('No probe ID specified')
@@ -187,6 +214,11 @@ def probe_setup():
 @app.route('/user_managment', methods=['GET', 'POST'])
 @flask_login.login_required
 def user_managment():
+    """Render page for adding, editing or removing users on GET. Also parse input
+    on POST.
+
+    This page can only be accessed by an admin.
+    """
     if not current_user.admin:
         return abort(403)
 
@@ -226,6 +258,10 @@ def user_managment():
 @app.route('/edit_user', methods=['GET', 'POST'])
 @flask_login.login_required
 def edit_user():
+    """Render page for editing user information.
+
+    This page can only be accessed by an admin
+    """
     if not current_user.admin:
         return abort(403)
 
@@ -259,6 +295,21 @@ def edit_user():
 
 @app.route('/register_key', methods=['POST'])
 def register_key():
+    """Takes an SSH public key, host key and a MAC, and registers
+    it to the corresponding probe if a probe with that MAC has been added
+    through the website.
+
+    The function can give the following responses (with explanation):
+        invalid-mac                 : The supplied MAC was invalid (in form)
+        unknown-mac                 : The MAC was valid, but is not in the database
+        invalid-pub-key             : The pub key was invalid (in form)
+        invalid-host-key            : The host key was invalid (in form)
+        already-registered          : There already exists keys associated with this MAC
+        assocation-period-expired   : The assocation period has expired and needs
+                                      to be renewed through the web site
+        success                     : The keys were successfully registered/associated
+                                      with the corresponding MAC address
+    """
     mac = request.form.get('mac', '')
     if not util.is_mac_valid(mac):
         return 'invalid-mac'
@@ -296,6 +347,17 @@ def register_key():
 
 @app.route('/get_port', methods=['GET'])
 def get_port():
+    """Returns the port number associated with the supplied MAC.
+
+    The port will be used to construct a SSH tunnel
+
+    The function can give the following responses (with explanation):
+        invalid-mac       : The supplied MAC was invalid (in format)
+        unknown-mac       : The MAC was valid, but is not in the database
+        no-registered-key : No SSH key has been associated with this MAC,
+                            and therefore no port will be sent
+        <port>            : Returns the queried port (a valid MAC was received)
+    """
     mac = request.args.get('mac', '')
     if not util.is_mac_valid(mac):
         return 'invalid-mac'
@@ -320,6 +382,7 @@ def get_port():
 
 
 def generate_probe_setup_template(probe_id, username):
+    """Generate a probe setup page and return it."""
     probe_data = database.get_probe_data(probe_id)
     required_entries = [
             {'key': 'probe_name', 'description': 'Probe name', 'value': probe_data['name']},

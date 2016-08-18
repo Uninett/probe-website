@@ -5,6 +5,8 @@ from os import kill
 
 
 def is_mac_valid(mac):
+    """Return true if 'mac' is a non-empty string matching the MAC
+    address format."""
     if type(mac) is not str or mac == '':
         return False
 
@@ -12,6 +14,11 @@ def is_mac_valid(mac):
 
 
 def is_pub_ssh_key_valid(key):
+    """Return true if if 'key' has the correct public SSH key format
+
+    (NB: It does not check if key/base64 part itself is valid, only
+    that it has the correct prefix)
+    """
     try:
         mode, key, comment = key.split()
     except:
@@ -21,7 +28,9 @@ def is_pub_ssh_key_valid(key):
             'AAAAB3NzaC1yc2EA' in key and
             len(comment.split('@')) == 2)
 
+
 def is_ssh_host_key_valid(key):
+    """Return true if 'key' is a valid SSH host key."""
     try:
         hostname, mode, key = key.split()
     except:
@@ -35,6 +44,11 @@ def is_ssh_host_key_valid(key):
 
 
 def convert_mac(mac, mode):
+    """Converts 'mac' between two modes: 'display' or 'storage'
+
+    Display mode looks like this: 12:34:56:AB:CD:EF
+    Storage mode looks like this: 123456abcdef
+    """
     mac = mac.lower().replace(':', '')
 
     # format: 123456abcdef
@@ -45,15 +59,22 @@ def convert_mac(mac, mode):
         return ':'.join([mac[i:i+2] for i in range(0, len(mac), 2)]).upper()
 
 
-# The raw config is in the format ImmutableMultiDict([('script.6.enabled', 'on'),
-# ('script.7.interval', '10'), ... ]) etc.
-# where each element is (<type>.<id>.attribute, value). The list will also
-# include configs not in this format, so ignore those.
-# This function converts it to this format: {id1: {'name': 'name', ..}, id2: { ... }, ... } i.e.
-# groups values for each id together
-# configs contains all the config data, while config_type is the
-# content we want to extract
 def parse_configs(configs, config_type):
+    """Parse data from HTTP POST forms into python datastructures.
+
+    'configs' is in the format ImmutableMultiDict([('script.6.enabled', 'on'),
+    ('script.7.interval', '10'), ... ]) etc.
+    where each element is (<type>.<id>.<attribute>, <value>). The list may also
+    include configs not in this format, so ignore those.
+
+    This function converts 'configs' to this format:
+    {id1: {'name': 'name', ..}, id2: { ... }, ... }
+    i.e. groups values for each id together
+
+    'configs' contains all the config data, while 'config_type' is the
+    content we want to extract
+    """
+
     parsed = {}
     for tup in configs:
         try:
@@ -75,13 +96,19 @@ def parse_configs(configs, config_type):
 
 
 def allowed_cert_filename(filename):
+    """Return true if filename looks like a filename and has a valid
+    file extension"""
     return '.' in filename and filename.rsplit('.', 1)[1] in \
-            settings.ALLOWED_CERT_EXTENSIONS
+        settings.ALLOWED_CERT_EXTENSIONS
 
 
-# Uses nc (netcat) to check whether a probe is connected to
-# the specified port
 def is_probe_connected(port):
+    """Return true if there is a probe connected at 'port', i.e.
+    [localhost]:<port>.
+
+    Uses nc (netcat) to check whether a probe is connected to
+    the specified port
+    """
     try:
         port = str(port)
         if not fullmatch('[0-9]{1,5}', port):
@@ -90,6 +117,9 @@ def is_probe_connected(port):
         print('Invalid port number')
         return -1
 
+    # From netcat manpage:
+    # -z      Specifies that nc should just scan for listening daemons,
+    #         without sending any data to them.
     command = ['nc', '-z', 'localhost', port]
     ret_code = call(command)
 
@@ -97,6 +127,11 @@ def is_probe_connected(port):
 
 
 def strip_id(data):
+    """Remove all 'id' dictionary keys in 'data'.
+
+    Merging of config files will not work properly if the id key/value pair is
+    included, because it makes every entry unique.
+    """
     for entry in data:
         if 'id' in entry:
             del entry['id']
