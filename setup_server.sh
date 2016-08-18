@@ -22,11 +22,12 @@ fi
 
 echo '[+] Installing required programs'
 # NB: Must have ansible 2.x
-apt-get install python3 python3-pip ansible netcat
+apt-get update
+apt-get install --yes python3 python3-pip ansible netcat
 
 # These programs are required for the python cryptography module to compile
 # (when installed with pip)
-apt-get install build-essential libssl-dev libffi-dev python-dev
+apt-get install --yes build-essential libssl-dev libffi-dev python-dev
 
 pip3 install -r requirements.txt
 
