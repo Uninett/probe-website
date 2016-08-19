@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# NB: THIS SCRIPT IS COMPLETELY UNTESTED.
-#     Stuff may/will break if it is run directly
-
 # This script will set up the current computer as a WiFi probe server
 # (i.e. both a web server and and Ansible server). It is assumed to be
 # running a Debian based distro.
@@ -79,5 +76,6 @@ mkdir /etc/wifi_probing
 echo "${CURR_DIR}/database.db" > /etc/wifi_probing/db_path.txt
 
 
-echo '[+] Add web site path to python settings'
+echo '[+] Add paths to config files'
 sed -i "s|ADD_PROJECT_PATH_HERE|${CURR_DIR}|g" "${CURR_DIR}/probe_website/settings.py"
+sed -i "s|ADD_CERT_DIR_HERE|${CURR_DIR}/ansible-probes/certs|g" "${CURR_DIR}/ansible-probes/group_vars/all/locations"
