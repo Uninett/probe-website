@@ -44,7 +44,7 @@ echo "[+] Done"
 
 echo "[+] Getting image offset"
 sector_size=$(fdisk -lu "${FILENAME}" | grep -oP '(?<=Sector size \(logical/physical\): )[0-9]{1,4}')
-fs_start=$(fdisk -lu "${FILENAME}" | tail -n 1 | awk '{print $2}')
+fs_start=$(fdisk -lu "${FILENAME}" | grep -v '^$' | tail -n 1 | awk '{print $2}')
 offset=$((sector_size * fs_start))
 
 
