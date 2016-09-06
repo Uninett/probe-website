@@ -5,13 +5,19 @@
 {% block body %}
 
 <h1>Download image</h1>
-<br/>
-<p class="lead">Description here</p>
-<br/>
+<p class="lead">
+Here you can download the Linux image to install on the probes.
+</p>
+<p>
+Download either for Raspberry Pi 1 or Raspberry Pi 2/3 (common image).
+</p>
 
-<!-- <a href="{{ image_file }}"> -->
-<a href="image_path_here" download>
-  <button type="button" class="btn btn-lg btn-default" name="download">Download image</button>
+<a href="{{ url_for('static', filename='images/rpi1_probe.img') }}" download>
+  <button type="button" class="btn btn-lg btn-default" name="download">Download RPi 1 image</button>
+</a>
+
+<a href="{{ url_for('static', filename='images/rpi2-3_probe.img') }}" download>
+  <button type="button" class="btn btn-lg btn-default" name="download">Download RPi 2/3 image</button>
 </a>
 
 {% endblock %}
