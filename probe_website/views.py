@@ -374,6 +374,31 @@ def get_port():
     return str(probe.port)
 
 
+@app.route('/get_connection_status', methods=['GET'])
+def get_connection_status():
+    """Return the connection status on the SSH tunnel of the specified probe
+
+    The only argument is mac, which should be the probe's MAC address
+    Returned statuses will be either:
+        invalid-mac
+        unknown-mac
+        connected
+        not-connected
+    """
+    mac = request.args.get('mac', '')
+    if mac == '':
+        return 'invalid-mac'
+
+    mac = util.convert_mac(mac, 'storage')
+    probe = database.get_probe(mac)
+    if probe is None:
+        return 'unknown-mac'
+
+    status = util.is_probe_connected(probe.port)
+
+    return 'connected' if status else 'not-connected'
+
+
 #################################################################
 #                                                               #
 #  Everything below should probably be moved to its own module  #

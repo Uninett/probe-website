@@ -48,11 +48,7 @@
             </td>
             {% if probes|length > 0 %}
             <td>
-              {% if probe.connected %}
-              <p style="color:green;">Connected</p>
-              {% else %}
-              <p style="color:red;">Not connected</p>
-              {% endif %}
+              <p name="connection-status" data-mac="{{ probe.storage_id }}" style="color:gray;">Loading...</p>
             </td>
             <td>
               {% if probe.ansible_status == 'running' %}
@@ -101,6 +97,34 @@
     </div>  
   </div>  
 </div>
+
+<script type="text/javascript">
+  $(document).ready(function() {
+    $("[name^=connection-status]").each(function(index, element) {
+      $.get("/get_connection_status", {
+        mac: $(element).data("mac")
+      },
+      function(data) {
+        text = "";
+        color = "";
+        if(data == "connected") {
+          text = "Connected";
+          color = "green";
+        }
+        else if(data == "not-connected") {
+          text = "Not connected";
+          color = "red";
+        }
+        else {
+          text = "Unknown";
+          color = "gray";
+        }
+        $(element).html(text);
+        $(element).attr("style", "color:" + color + ";");
+      });
+    });
+  });
+</script>
 
 <form method="POST">
   <button type="submit" class="btn btn-lg btn-primary" name="action" value="push_config">

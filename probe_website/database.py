@@ -338,6 +338,7 @@ class DatabaseManager():
         data = {
                 'name': probe.name,
                 'id': util.convert_mac(probe.custom_id, mode='display'),
+                'storage_id': probe.custom_id,
                 'location': probe.location,
                 'scripts': self.get_script_data(probe),
                 'network_configs': self.get_network_config_data(probe),
