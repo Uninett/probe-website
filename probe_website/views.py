@@ -7,7 +7,7 @@ from probe_website import ansible_interface as ansible
 import flask_login
 from flask_login import current_user
 
-database = probe_website.database.DatabaseManager(settings.DATABASE_PATH)
+database = probe_website.database.DatabaseManager(settings.DATABASE_URL)
 form_parsers.set_database(database)
 
 login_manager = flask_login.LoginManager()

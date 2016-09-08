@@ -15,9 +15,12 @@ from probe_website.models import Probe, Script, NetworkConfig, Database, User
 
 class DatabaseManager():
     """Class managing pretty much all queries to the SQL database"""
-    def __init__(self, database_path):
-        """Set up SQL Alchemy with the database at 'database_path'"""
-        self.engine = create_engine('sqlite:///' + database_path, convert_unicode=True)
+    def __init__(self, database_url):
+        """Set up SQL Alchemy with the database at 'database_path'
+
+        database_url can be e.g. 'sqlite:////home/bob/database.db'
+        """
+        self.engine = create_engine(database_url, convert_unicode=True)
         self.session = scoped_session(sessionmaker(autocommit=False,
                                                    autoflush=False,
                                                    bind=self.engine))

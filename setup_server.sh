@@ -50,30 +50,22 @@ if [[ ! -f /home/dummy/.ssh/id_rsa ]]; then
 fi
 
 
-echo '[+] Make sure root owns get_probe_keys.sh & copy it to proper location'
-chown root get_probe_keys.sh
-chmod +x get_probe_keys.sh
-cp get_probe_keys.sh /usr/bin/
+echo '[+] Make sure root owns get_probe_keys.py & the web root dir'
+chown root get_probe_keys.py
+chown root .
 
+
+CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 if [[ ! $(grep 'Match User dummy' /etc/ssh/sshd_config) ]]; then
     echo '[+] Adding sshd_config entry for dummy user'
 cat << EOF >> /etc/ssh/sshd_config
 Match User dummy
     ForceCommand /bin/false
-    AuthorizedKeysCommand /usr/bin/get_probe_keys.sh
+    AuthorizedKeysCommand ${CURR_DIR}/get_probe_keys.py
     AuthorizedKeysCommandUser nobody
 EOF
 fi
-
-
-CURR_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-
-# The get_probe_keys.sh script needs to know where the db is located, so
-# it can query it.
-echo '[+] Make file with location of sql db location'
-mkdir /etc/wifi_probing
-echo "${CURR_DIR}/database.db" > /etc/wifi_probing/db_path.txt
 
 
 echo '[+] Add paths to config files'
