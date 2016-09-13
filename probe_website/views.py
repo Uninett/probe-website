@@ -129,7 +129,7 @@ def probes():
                 database.save_changes()
         elif action == 'push_config':
             # Only run one instance of Ansible at a time (for each user)
-            if ansible.get_playbook_status(current_user.username) != 'running':
+            if ansible.get_playbook_status(current_user.username) == 'not-running':
                 # Export the script configs in the sql database to ansible readable configs
                 user = database.get_user(current_user.username)
                 for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
@@ -395,6 +395,41 @@ def get_connection_status():
     status = util.is_probe_connected(probe.port)
 
     return 'connected' if status else 'not-connected'
+
+
+@app.route('/get_ansible_status', methods=['GET'])
+def get_ansible_status():
+    """Return the status on the current ansible update
+
+    The only argument is mac, which should be the probe's MAC address
+    Returned statuses will be either:
+        invalid-mac
+        unknown-mac
+        updating
+        completed
+        failed
+        has-been-updated
+        has-not-been-updated
+    """
+    mac = request.args.get('mac', '')
+    if mac == '':
+        return 'invalid-mac'
+
+    mac = util.convert_mac(mac, 'storage')
+    probe = database.get_probe(mac)
+    if probe is None:
+        return 'unknown-mac'
+
+    status = ansible.get_playbook_status(current_user.username, probe)
+
+    if status == 'completed':
+        probe.has_been_updated = True
+        database.save_changes()
+
+    if status in ['updating', 'completed', 'failed']:
+        return status
+
+    return 'has-been-updated' if probe.has_been_updated else 'has-not-been-updated'
 
 
 #################################################################

@@ -52,6 +52,7 @@ class Probe(Base):
 
     association_period_start = Column(Integer)
     associated = Column(Boolean)
+    has_been_updated = Column(Boolean)
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='probes')
@@ -65,6 +66,7 @@ class Probe(Base):
         self.set_host_key('')
         self.activated = False
         self.new_association_period()
+        self.has_been_updated = False
 
     def set_pub_key(self, key):
         self.pub_key = key

@@ -309,21 +309,8 @@ class DatabaseManager():
         all_data = []
         user = self.get_user(username)
 
-        ansible_status = ansible.get_playbook_status(username)
         for probe in self.session.query(Probe).filter(Probe.user_id == user.id).all():
             data_entry = self.get_probe_data(probe.custom_id)
-
-            if type(ansible_status) == dict:
-                try:
-                    data_entry['ansible_status'] = ansible_status[probe.custom_id]
-                except:
-                    data_entry['ansible_status'] = ''
-            elif (ansible_status is None or
-                    not util.is_probe_connected(probe.port) or
-                    type(ansible_status) != str):
-                data_entry['ansible_status'] = ''
-            else:
-                data_entry['ansible_status'] = ansible_status
 
             # We don't need the detailed data
             data_entry.pop('scripts')
@@ -344,7 +331,6 @@ class DatabaseManager():
                 'network_configs': self.get_network_config_data(probe),
                 'associated': probe.associated,
                 'association_period_expired': probe.association_period_expired(),
-                'connected': util.is_probe_connected(probe.port)
         }
         return data
 
