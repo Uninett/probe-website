@@ -138,14 +138,12 @@ def probes():
                                                {'host_script_configs': data},
                                                'script_configs')
 
-                    if (not probe.associated or
-                            not util.is_probe_connected(probe.port) or
-                            not database.valid_network_configs(probe) or
-                            not database.valid_database_configs(user)):
-                        return redirect(url_for('probes'))
-
-                    data = util.strip_id(database.get_network_config_data(probe))
-                    ansible.export_host_config(probe.custom_id,
+                    if (probe.associated and
+                            util.is_probe_connected(probe.port) and
+                            database.valid_network_configs(probe) and
+                            database.valid_database_configs(user)):
+                        data = util.strip_id(database.get_network_config_data(probe))
+                        ansible.export_host_config(probe.custom_id,
                                                {'networks': data},
                                                'network_configs')
                 ansible.export_to_inventory(current_user.username, database)
