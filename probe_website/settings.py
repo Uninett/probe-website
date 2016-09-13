@@ -1,8 +1,8 @@
-ROOT_DIR = '/home/frestr/Projects/probe-website/'
+ROOT_DIR = 'ADD_PROJECT_PATH_HERE'
 
 ANSIBLE_PATH = ROOT_DIR + '/ansible-probes/'
 
-DATABASE_URL = 'sqlite:////home/frestr/Projects/probe-website/database.db'
+DATABASE_URL = 'sqlite:///' + ROOT_DIR + '/database.db'
 
 CERTIFICATE_DIR = ROOT_DIR + '/ansible-probes/certs/'
 ALLOWED_CERT_EXTENSIONS = set(['cer', 'cert', 'ca', 'pem'])
