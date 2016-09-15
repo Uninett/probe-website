@@ -198,6 +198,9 @@ def run_ansible_playbook(username):
 
     log_file.close()
 
+    # Change ansible status immediately
+    get_playbook_status(username, probe=None, force_fileread=True)
+
 
 def is_ansible_running(username):
     if username in _ansible_pid:
