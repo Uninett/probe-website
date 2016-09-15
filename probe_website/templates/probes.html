@@ -91,8 +91,8 @@
 </div>
 
 <script type="text/javascript">
-  $(document).ready(function() {
-    // Query for and replace each probe's connection status
+  // Query for and replace each probe's connection status
+  var update_connection_status =  function() {
     $("[name^=connection-status]").each(function(index, element) {
       $.get("/get_connection_status", {
         mac: $(element).data("mac")
@@ -117,7 +117,10 @@
         $(element).attr("style", "color:" + color + ";");
       });
     });
-    // Query for and replace each probe's ansible status
+  };
+
+  // Query for and replace each probe's ansible status
+  var update_ansible_status = function() {
     $("[name^=ansible-status]").each(function(index, element) {
       $.get("/get_ansible_status", {
         mac: $(element).data("mac")
@@ -154,6 +157,14 @@
         $(element).attr("style", "color:" + color + ";");
       });
     });
+  };
+
+  // Run updates at page load, and then at 30 second intervals  
+  $(document).ready(function () {
+    update_connection_status();
+    update_ansible_status();
+    setInterval(update_connection_status, 30000);
+    setInterval(update_ansible_status, 30000);
   });
 </script>
 

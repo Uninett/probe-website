@@ -129,7 +129,7 @@ def probes():
                 database.save_changes()
         elif action == 'push_config':
             # Only run one instance of Ansible at a time (for each user)
-            if ansible.get_playbook_status(current_user.username) == 'not-running':
+            if not ansible.is_ansible_running(current_user.username):
                 # Export the script configs in the sql database to ansible readable configs
                 user = database.get_user(current_user.username)
                 for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
