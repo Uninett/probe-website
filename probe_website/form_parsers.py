@@ -155,6 +155,13 @@ def update_databases(username):
         if not success:
             successful = False
 
+    from probe_website.models import Database
+    for db in database.session.query(Database).filter(Database.user_id == database.get_user(username).id).all():
+        if db.id in configs and 'enabled' in configs[db.id]:
+            db.enabled = True
+        else:
+            db.enabled = False
+
     return successful
 
 

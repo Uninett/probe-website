@@ -153,6 +153,7 @@ class Database(Base):
     port = Column(String(6))
     username = Column(String(256))
     password = Column(String(256))
+    enabled = Column(Boolean)
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='databases')
@@ -164,6 +165,7 @@ class Database(Base):
         self.port = port
         self.username = username
         self.password = password
+        self.enabled = False
 
     def is_filled(self):
         def filled(x):

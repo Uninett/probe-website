@@ -115,8 +115,9 @@ class DatabaseManager():
         user.databases.append(db)
 
     def add_default_databases(self, user):
-        """Add InfluxDB as a a default database for 'user'"""
+        """Add InfluxDB and Elastic search as default databases for 'user'"""
         self.add_database(user, 'influxdb', '', '', '', '', '')
+        self.add_database(user, 'elastic', '', '', '', '', '')
 
     def load_default_scripts(self, probe, username):
         """Load default scripts for probe from Ansible configs. The default
@@ -392,7 +393,8 @@ class DatabaseManager():
                     'port': database.port,
                     'username': database.username,
                     'password': database.password,
-                    'id': database.id
+                    'id': database.id,
+                    'enabled': database.enabled
             }
         return configs
 

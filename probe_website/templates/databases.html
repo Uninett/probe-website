@@ -14,40 +14,67 @@
   {% for db_type, db in dbs.items() %}
     {% if db_type == 'influxdb' %}
     <h2>InfluxDB</h2>
+    {% elif db_type == 'elastic' %}
+    <h2>Elastic Search</h2>
+    {% endif %}
+
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Enabled</label>
+      <div class="col-sm-1">
+        <input type="checkbox" name="database.{{ db.id }}.enabled" id="{{ db.id }}-enabled" {% if db.enabled %}checked{% endif %}>
+      </div>
+    </div>
     <div class="form-group">
       <label class="col-sm-2 control-label">Server address (IP / DNS record)</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="database.{{ db.id }}.address" value="{{ db.address }}" required/>
+        <input type="text" class="form-control" name="database.{{ db.id }}.address" id="{{ db.id }}-address" value="{{ db.address }}" required/>
       </div>
     </div>
     <div class="form-group">
       <label class="col-sm-2 control-label">Server port</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="database.{{ db.id }}.port" value="{{ db.port }}" required/>
+        <input type="text" class="form-control" name="database.{{ db.id }}.port" id="{{ db.id }}-port" value="{{ db.port }}" required/>
       </div>
     </div>
     <div class="form-group">
       <label class="col-sm-2 control-label">Database name</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="database.{{ db.id }}.db_name" value="{{ db.db_name }}" required/>
+        <input type="text" class="form-control" name="database.{{ db.id }}.db_name" id="{{ db.id }}-db_name" value="{{ db.db_name }}" required/>
       </div>
     </div>
     <div class="form-group">
       <label class="col-sm-2 control-label">Username</label>
       <div class="col-sm-10">
-        <input type="text" class="form-control" name="database.{{ db.id }}.username" value="{{ db.username }}" required/>
+        <input type="text" class="form-control" name="database.{{ db.id }}.username" id="{{ db.id }}-username" value="{{ db.username }}" required/>
       </div>
     </div>
     <div class="form-group">
       <label class="col-sm-2 control-label">Password</label>
       <div class="col-sm-10">
-        <input type="password" class="form-control" name="database.{{ db.id }}.password" value="{{ db.password }}" required/>
+        <input type="password" class="form-control" name="database.{{ db.id }}.password" id="{{ db.id }}-password" value="{{ db.password }}" required/>
       </div>
     </div>
-    {% endif %}
   {% endfor %}
 
   <button type="submit" class="btn btn-lg btn-default" name="save">Save configuration</button>
 </form>
+
+<script type="text/javascript">
+function disable_inputs(id, disabled) {
+  $("#" + id + "-address").prop('disabled', disabled);
+  $("#" + id + "-port").prop('disabled', disabled);
+  $("#" + id + "-db_name").prop('disabled', disabled);
+  $("#" + id + "-username").prop('disabled', disabled);
+  $("#" + id + "-password").prop('disabled', disabled);
+}
+$(document).ready(function() {
+  $("[id$=-enabled]").each(function() {
+    disable_inputs(this.id.split('-')[0], ! this.checked);
+    $(this).change(function() {
+      disable_inputs(this.id.split('-')[0], ! this.checked);
+    });
+  });
+});
+</script>
 
 {% endblock %}
