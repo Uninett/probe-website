@@ -15,7 +15,7 @@
     {% if db_type == 'influxdb' %}
     <h2>InfluxDB</h2>
     {% elif db_type == 'elastic' %}
-    <h2>Elastic Search</h2>
+    <h2>Elasticsearch</h2>
     {% endif %}
 
 
@@ -69,21 +69,14 @@
         <input type="text" class="form-control" name="database.{{ db.id }}.port" id="{{ db.id }}-port" value="{{ db.port }}" required/>
       </div>
     </div>
-
-    {% if db_type == 'elastic' %}
     <div class="form-group">
-      <label class="col-sm-2 control-label">OAuth token</label>
-      <div class="col-sm-10">
-        <input type="text" class="form-control" name="database.{{ db.id }}.token" id="{{ db.id }}-token" value="{{ db.token }}" required/>
-      </div>
-    </div>
-    {% else %}
-    <div class="form-group">
-      <label class="col-sm-2 control-label">Database name</label>
+      <label class="col-sm-2 control-label">{% if db_type == 'elastic' %}Index name/pattern{% else %}Database name{% endif %}</label>
       <div class="col-sm-10">
         <input type="text" class="form-control" name="database.{{ db.id }}.db_name" id="{{ db.id }}-db_name" value="{{ db.db_name }}" required/>
       </div>
     </div>
+
+    {% if db_type != 'elastic' %}
     <div class="form-group">
       <label class="col-sm-2 control-label">Username</label>
       <div class="col-sm-10">
@@ -110,11 +103,17 @@ function disable_inputs(id, disabled) {
   $("#" + id + "-db_name").prop('disabled', disabled);
   $("#" + id + "-username").prop('disabled', disabled);
   $("#" + id + "-password").prop('disabled', disabled);
-  $("#" + id + "-token").prop('disabled', disabled);
 }
 $(document).ready(function() {
-  $("[name$=\\.status]").each(function() {
-    disable_inputs(this.id.split('-')[0], (this.value === 'disabled' || this.value === 'uninett') && this.checked);
+  $(":radio[name$=\\.status]").each(function() {
+      //alert(this.name + " " + this.value);
+    if(this.checked) {
+      if(this.value == 'disabled' || this.value == 'uninett') {
+          disable_inputs(this.id.split('-')[0], true);
+        } else if (this.value == 'enabled' || this.value == 'custom') {
+          disable_inputs(this.id.split('-')[0], false);
+      }
+    }
     $(this).change(function() {
       disable_inputs(this.id.split('-')[0], (this.value === 'disabled' || this.value === 'uninett') && this.checked);
     });

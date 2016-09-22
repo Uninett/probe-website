@@ -149,14 +149,13 @@ def update_databases(username):
 
     successful = True
     for db_id, config in configs.items():
-        for key in ['db_name', 'address', 'port', 'username', 'password', 'token', 'status']:
+        for key in ['db_name', 'address', 'port', 'username', 'password', 'status']:
             if key not in config:
                 config[key] = ''
 
         success = database.update_database(user, db_id, db_name=config['db_name'], address=config['address'],
                                            port=config['port'], username=config['username'],
-                                           password=config['password'], token=config['token'],
-                                           status=config['status'])
+                                           password=config['password'], status=config['status'])
         if not success:
             successful = False
 

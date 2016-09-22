@@ -259,7 +259,7 @@ class DatabaseManager():
         return True
 
     def update_database(self, user, db_id, db_name=None, address=None, port=None, 
-                        username=None, password=None, token=None, status=None):
+                        username=None, password=None, status=None):
         """Update 'user's 'db_id' with new attributes"""
         if user is None:
             return False
@@ -278,8 +278,6 @@ class DatabaseManager():
             db.username = username
         if self.is_valid_string(password):
             db.password = password
-        if self.is_valid_string(token):
-            db.token = token
         if self.is_valid_string(status):
             db.status = status
 
