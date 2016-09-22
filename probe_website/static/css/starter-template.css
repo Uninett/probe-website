@@ -9,3 +9,7 @@ body {
 textarea {
     resize: none;
 }
+
+.form-group {
+    text-align: left;
+}

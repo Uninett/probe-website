@@ -112,6 +112,7 @@ class Script(Base):
                 'probe_id={}'.format(self.id, self.description, self.filename, self.args,
                                      self.minute_interval, self.enabled, self.required, self.probe_id))
 
+
 class NetworkConfig(Base):
     __tablename__ = 'network_configs'
     id = Column(Integer, primary_key=True)
@@ -144,6 +145,7 @@ class NetworkConfig(Base):
                 filled(self.username) and
                 filled(self.password))
 
+
 class Database(Base):
     __tablename__ = 'databases'
     id = Column(Integer, primary_key=True)
@@ -153,19 +155,21 @@ class Database(Base):
     port = Column(String(6))
     username = Column(String(256))
     password = Column(String(256))
-    enabled = Column(Boolean)
+    status = Column(String(256))
+    token = Column(String(1024))
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='databases')
 
-    def __init__(self, db_name, db_type, address, port, username, password):
+    def __init__(self, db_name, db_type, address, port, username, password, status):
         self.db_name = db_name
         self.db_type = db_type
         self.address = address
         self.port = port
         self.username = username
         self.password = password
-        self.enabled = False
+        self.status = status
+        self.token = ''
 
     def is_filled(self):
         def filled(x):

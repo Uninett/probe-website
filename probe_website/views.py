@@ -6,6 +6,7 @@ from probe_website import settings, form_parsers, util
 from probe_website import ansible_interface as ansible
 import flask_login
 from flask_login import current_user
+from collections import OrderedDict
 
 database = probe_website.database.DatabaseManager(settings.DATABASE_URL)
 form_parsers.set_database(database)
@@ -92,6 +93,9 @@ def databases():
             flash(settings.ERROR_MESSAGE['invalid_settings'], 'error')
 
     db_info = database.get_database_info(current_user.username)
+
+    # Make sure the databases occur in the same order each time
+    db_info = OrderedDict(sorted(db_info.items(), key=lambda x: x[0]))
 
     return render_template('databases.html',
                            dbs=db_info)

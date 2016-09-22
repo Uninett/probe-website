@@ -149,18 +149,16 @@ def update_databases(username):
 
     successful = True
     for db_id, config in configs.items():
+        for key in ['db_name', 'address', 'port', 'username', 'password', 'token', 'status']:
+            if key not in config:
+                config[key] = ''
+
         success = database.update_database(user, db_id, db_name=config['db_name'], address=config['address'],
                                            port=config['port'], username=config['username'],
-                                           password=config['password'])
+                                           password=config['password'], token=config['token'],
+                                           status=config['status'])
         if not success:
             successful = False
-
-    from probe_website.models import Database
-    for db in database.session.query(Database).filter(Database.user_id == database.get_user(username).id).all():
-        if db.id in configs and 'enabled' in configs[db.id]:
-            db.enabled = True
-        else:
-            db.enabled = False
 
     return successful
 

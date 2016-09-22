@@ -107,17 +107,17 @@ class DatabaseManager():
         config = NetworkConfig(name, ssid, anonymous_id, username, password)
         probe.network_configs.append(config)
 
-    def add_database(self, user, db_type, name, address, port, username, password):
+    def add_database(self, user, db_type, name, address, port, username, password, status):
         """Add a new database for 'user' (NB: This is NOT a SQL database, but rather the
         credentials for the database the probe will send data to (like InfluxDB))"""
         # Need to take user into account here
-        db = Database(name, db_type, address, port, username, password)
+        db = Database(name, db_type, address, port, username, password, status)
         user.databases.append(db)
 
     def add_default_databases(self, user):
         """Add InfluxDB and Elastic search as default databases for 'user'"""
-        self.add_database(user, 'influxdb', '', '', '', '', '')
-        self.add_database(user, 'elastic', '', '', '', '', '')
+        self.add_database(user, 'influxdb', '', '', '', '', '', 'disabled')
+        self.add_database(user, 'elastic', '', '', '', '', '', 'uninett')
 
     def load_default_scripts(self, probe, username):
         """Load default scripts for probe from Ansible configs. The default
@@ -258,7 +258,8 @@ class DatabaseManager():
 
         return True
 
-    def update_database(self, user, db_id, db_name=None, address=None, port=None, username=None, password=None):
+    def update_database(self, user, db_id, db_name=None, address=None, port=None, 
+                        username=None, password=None, token=None, status=None):
         """Update 'user's 'db_id' with new attributes"""
         if user is None:
             return False
@@ -277,6 +278,10 @@ class DatabaseManager():
             db.username = username
         if self.is_valid_string(password):
             db.password = password
+        if self.is_valid_string(token):
+            db.token = token
+        if self.is_valid_string(status):
+            db.status = status
 
         return True
 
@@ -394,7 +399,8 @@ class DatabaseManager():
                     'username': database.username,
                     'password': database.password,
                     'id': database.id,
-                    'enabled': database.enabled
+                    'status': database.status,
+                    'token': database.token
             }
         return configs
 

@@ -18,12 +18,45 @@
     <h2>Elastic Search</h2>
     {% endif %}
 
+
+    {% if db_type == 'elastic' %}
     <div class="form-group">
-      <label class="col-sm-2 control-label">Enabled</label>
-      <div class="col-sm-1">
-        <input type="checkbox" name="database.{{ db.id }}.enabled" id="{{ db.id }}-enabled" {% if db.enabled %}checked{% endif %}>
+      <label class="col-sm-2 control-label">DB information</label>
+      <div class="col-sm-10">
+        <div class="radio">
+          <label>
+            <input type="radio" name="database.{{ db.id }}.status" id="{{ db.id }}-status-uninett" value="uninett" {% if db.status == 'uninett' %}checked{% endif %}>
+            Use UNINETT's
+          </label>
+          <label>
+            <input type="radio" name="database.{{ db.id }}.status" id="{{ db.id }}-status-disabled" value="disabled" {% if db.status == 'disabled' %}checked{% endif %}>
+            Disabled
+          </label>
+          <label>
+            <input type="radio" name="database.{{ db.id }}.status" id="{{ db.id }}-status-custom" value="custom" {% if db.status == 'custom' %}checked{% endif %}>
+            Custom
+          </label>
+        </div>
       </div>
     </div>
+    {% else %}
+    <div class="form-group">
+      <label class="col-sm-2 control-label">Status</label>
+      <div class="col-sm-10">
+        <div class="radio">
+          <label>
+            <input type="radio" name="database.{{ db.id }}.status" id="{{ db.id }}-status-enabled" value="enabled" {% if db.status == 'enabled' %}checked{% endif %}>
+            Enabled
+          </label>
+          <label>
+            <input type="radio" name="database.{{ db.id }}.status" id="{{ db.id }}-status-disabled" value="disabled" {% if db.status == 'disabled' %}checked{% endif %}>
+            Disabled
+          </label>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <div class="form-group">
       <label class="col-sm-2 control-label">Server address (IP / DNS record)</label>
       <div class="col-sm-10">
@@ -36,6 +69,15 @@
         <input type="text" class="form-control" name="database.{{ db.id }}.port" id="{{ db.id }}-port" value="{{ db.port }}" required/>
       </div>
     </div>
+
+    {% if db_type == 'elastic' %}
+    <div class="form-group">
+      <label class="col-sm-2 control-label">OAuth token</label>
+      <div class="col-sm-10">
+        <input type="text" class="form-control" name="database.{{ db.id }}.token" id="{{ db.id }}-token" value="{{ db.token }}" required/>
+      </div>
+    </div>
+    {% else %}
     <div class="form-group">
       <label class="col-sm-2 control-label">Database name</label>
       <div class="col-sm-10">
@@ -54,6 +96,8 @@
         <input type="password" class="form-control" name="database.{{ db.id }}.password" id="{{ db.id }}-password" value="{{ db.password }}" required/>
       </div>
     </div>
+    {% endif %}
+
   {% endfor %}
 
   <button type="submit" class="btn btn-lg btn-default" name="save">Save configuration</button>
@@ -66,12 +110,13 @@ function disable_inputs(id, disabled) {
   $("#" + id + "-db_name").prop('disabled', disabled);
   $("#" + id + "-username").prop('disabled', disabled);
   $("#" + id + "-password").prop('disabled', disabled);
+  $("#" + id + "-token").prop('disabled', disabled);
 }
 $(document).ready(function() {
-  $("[id$=-enabled]").each(function() {
-    disable_inputs(this.id.split('-')[0], ! this.checked);
+  $("[name$=\\.status]").each(function() {
+    disable_inputs(this.id.split('-')[0], (this.value === 'disabled' || this.value === 'uninett') && this.checked);
     $(this).change(function() {
-      disable_inputs(this.id.split('-')[0], ! this.checked);
+      disable_inputs(this.id.split('-')[0], (this.value === 'disabled' || this.value === 'uninett') && this.checked);
     });
   });
 });
