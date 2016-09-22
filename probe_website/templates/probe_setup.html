@@ -127,13 +127,13 @@
           <div class="form-group">
             <label class="col-sm-2 control-label">Certificate</label>
             <div class="col-sm-10">
-              <input type="file" name="network.{{ config.id }}.certificate" {% if cert_data[freq] == '' %}required{% endif %}>
-              {% if cert_data[freq] != '' %}
+              <label style="font-weight:normal;">
+                <input type="file" name="network.{{ config.id }}.certificate" {% if cert_data[freq] == '' %}required{% endif %}>
+                {% if cert_data[freq] != '' %}
+                (Currently using the following certificate: <b>{{ cert_data[freq] }})</b>
+                {% endif %}
+              </label>
             </div>
-              <p>
-              (Currently using the following certificate: <b>{{ cert_data[freq] }})</b>
-              </p>
-              {% endif %}
           </div>
             {% endif %}
           {% endfor %}

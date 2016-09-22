@@ -45,12 +45,12 @@
       <div class="col-sm-10">
         <div class="radio">
           <label>
-            <input type="radio" name="database.{{ db.id }}.status" id="{{ db.id }}-status-enabled" value="enabled" {% if db.status == 'enabled' %}checked{% endif %}>
-            Enabled
-          </label>
-          <label>
             <input type="radio" name="database.{{ db.id }}.status" id="{{ db.id }}-status-disabled" value="disabled" {% if db.status == 'disabled' %}checked{% endif %}>
             Disabled
+          </label>
+          <label>
+            <input type="radio" name="database.{{ db.id }}.status" id="{{ db.id }}-status-enabled" value="enabled" {% if db.status == 'enabled' %}checked{% endif %}>
+            Enabled
           </label>
         </div>
       </div>
