@@ -130,7 +130,7 @@
         color = "";
         switch(data) {
           case "updating":
-            text = "Updating...";
+            text = 'Updating...<img src="{{ url_for("static", filename="images/updating.gif") }}">'
             color = "orange";
             break;
           case "completed":
