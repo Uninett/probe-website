@@ -293,7 +293,7 @@ def _read_playbook_status(username):
             for key, value in status.items():
                 status[key] = 'completed' if value == 0 else 'failed'
         # Ansible is running
-        elif log_cont != '':
+        elif log_cont != '' and is_ansible_running(username):
             regex = '\n([a-zA-Z0-9_-]+) '
             probes = re.findall(regex, inv_cont)
             status = {name: 'updating' for name in probes}

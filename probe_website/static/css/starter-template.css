@@ -13,3 +13,45 @@ textarea {
 .form-group {
     text-align: left;
 }
+
+code {
+    font-family: monospace;
+    background-color: lightgrey;
+    color: black;
+}
+
+.introduction {
+    text-align: center;
+    width: 700px;
+    position: relative;
+    left: 20%;
+    font-size: 16pt;
+}
+
+.description {
+    text-align: left;
+    width: 800px;
+    position: relative;
+    left: 15%;
+    font-size: 12pt;
+}
+
+ol {
+    counter-reset: item;
+}
+
+ol > li {
+    counter-increment: item;
+}
+
+ol > li:before {
+}
+
+ol ol > li {
+    display: block;
+}
+
+ol ol > li:before {
+    content: counters(item, ".") ". ";
+    margin-left: -20px;
+}

@@ -68,6 +68,13 @@ def logout():
     return redirect(url_for('login'))
 
 
+@app.route('/instructions', methods=['GET'])
+@flask_login.login_required
+def instructions():
+    """Render instructions page."""
+    return render_template('instructions.html')
+
+
 @app.route('/download_image', methods=['GET'])
 @flask_login.login_required
 def download_image():

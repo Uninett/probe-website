@@ -5,7 +5,7 @@
 {% block body %}
 
 <h1>Probe setup</h1>
-<p class="lead">Set these values after having installed the downloaded image and connected the probes to the Internet</p>
+<p class="lead">Here you can set the credentials of the network the probe should perform measurements on, and adjust the interval test scripts will be run at.</p>
 
 {% if message is string and message != '' %}
 <p style="color:red;">{{ message }}</p>
@@ -17,9 +17,9 @@
   <button type="submit" class="btn btn-lg btn-default" name="action" value="save_as_default">Save configuration as default</button>
   <div id="extra_configs">
     <ul id="tabs" class="nav nav-tabs" data-tabs="tabs">
-      <li><a href="#basic" data-toggle="tab">Basic info</a></li>
-      <li><a href="#scripts" data-toggle="tab">Test scripts</a></li>
       <li class="active"><a href="#network" data-toggle="tab">Network</a></li>
+      <li><a href="#scripts" data-toggle="tab">Test scripts</a></li>
+      <li><a href="#basic" data-toggle="tab">Basic info</a></li>
     </ul>
     <div id="tab_content" class="tab-content">
 

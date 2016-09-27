@@ -370,7 +370,7 @@ class DatabaseManager():
                 descriptions = {
                         'two_g': '2.4 GHz',
                         'five_g': '5 GHz',
-                        'any': 'Any (will use both 2.4 GHz and 5 GHz)'
+                        'any': 'Any (will not differentiate between 2.4 GHz and 5 GHz)'
                 }
                 if config.name in descriptions:
                     configs[config.name]['description'] = descriptions[config.name]

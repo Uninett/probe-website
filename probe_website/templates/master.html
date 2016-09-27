@@ -9,7 +9,7 @@
     <!-- <meta name="author" content=""> -->
     <!-- <link rel="icon" href="../../favicon.ico"> -->
 
-    <title>{% block title %}{% endblock %}</title>
+    <title>{% block title %}{% endblock %} - UNINETT Probes</title>
 
     <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
     <link href="{{ url_for('static', filename='css/starter-template.css') }}" rel="stylesheet">
@@ -23,7 +23,11 @@
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container">
         <div class="navbar-header">
-          <a class="navbar-brand" href="{{ url_for('index') }}">UNINETT WiFi probes</a>
+          <a class="navbar-brand" href="{{ url_for('index') }}">
+            <label>
+              <img src="{{ url_for('static', filename='images/uninett.svg') }}" alt="Home" type="image/svg+xml" style="height:25px" align="texttop"> WiFi Probes
+            </label>
+          </a>
         </div>
         <div id="navbar" class="collapse navbar-collapse">
           <ul class="nav navbar-nav">
@@ -31,6 +35,9 @@
             {% if current_user.is_authenticated %}
             <li {% if request.url_rule.endpoint == "index" %}class="active"{% endif %}>
               <a href="{{ url_for('index') }}">Home</a>
+            </li>
+            <li {% if request.url_rule.endpoint == "instructions" %}class="active"{% endif %}>
+              <a href="{{ url_for('instructions') }}">Instructions</a>
             </li>
             <li {% if request.url_rule.endpoint == "download_image" %}class="active"{% endif %}>
               <a href="{{ url_for('download_image') }}">Download image</a>
