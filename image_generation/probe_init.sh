@@ -126,7 +126,7 @@ After=network.target network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/autossh -M 0 -N -T -L 9200:wifiprobeelk.labs.uninett.no:9200 -R${ssh_port}:localhost:22 ${SERVER_USER}@${server_host}
+ExecStart=/usr/bin/autossh -M 0 -N -T -o "ExitOnForwardFailure yes" -L 9200:wifiprobeelk.labs.uninett.no:9200 -R${ssh_port}:localhost:22 ${SERVER_USER}@${server_host}
 Restart=always
 RestartSec=30
 
