@@ -334,7 +334,7 @@ class DatabaseManager():
                 'scripts': self.get_script_data(probe),
                 'network_configs': self.get_network_config_data(probe),
                 'associated': probe.associated,
-                'association_period_expired': probe.association_period_expired(),
+                'association_period_expired': probe.association_period_expired()
         }
         return data
 
@@ -502,7 +502,9 @@ class DatabaseManager():
         for db_conf in user.databases:
             # For now, just make sure everything is filled out (in the future, with
             # more than one db, maybe check that at least one is filled out)
-            if not db_conf.is_filled():
+            if (db_conf.status != 'disabled' and
+                    db_conf.status != 'uninett' and
+                    not db_conf.is_filled()):
                 message = settings.ERROR_MESSAGE['fill_out_database_credentials']
                 flash(message, 'error')
                 success = False
