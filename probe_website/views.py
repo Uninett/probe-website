@@ -7,6 +7,7 @@ from probe_website import ansible_interface as ansible
 import flask_login
 from flask_login import current_user
 from collections import OrderedDict
+from datetime import datetime
 
 database = probe_website.database.DatabaseManager(settings.DATABASE_URL)
 form_parsers.set_database(database)
@@ -151,8 +152,8 @@ def probes():
 
                     if (probe.associated and
                             util.is_probe_connected(probe.port) and
-                            database.valid_network_configs(probe) and
-                            database.valid_database_configs(user)):
+                            database.valid_network_configs(probe, with_warning=True) and
+                            database.valid_database_configs(user, with_warning=True)):
                         data = util.strip_id(database.get_network_config_data(probe))
                         ansible.export_host_config(probe.custom_id,
                                                {'networks': data},
@@ -417,10 +418,9 @@ def get_ansible_status():
         invalid-mac
         unknown-mac
         updating
-        completed
         failed
-        has-been-updated
-        has-not-been-updated
+        not-updated
+        updated-{time of last update}
     """
     mac = request.args.get('mac', '')
     if mac == '':
@@ -432,15 +432,21 @@ def get_ansible_status():
         return 'unknown-mac'
 
     status = ansible.get_playbook_status(current_user.username, probe)
+    if status in ['updating', 'failed']:
+        return status
 
     if status == 'completed':
         probe.has_been_updated = True
-        database.save_changes()
+        if (probe.last_updated is None or
+                (datetime.today() - probe.last_updated).seconds >= 60):
+            probe.last_updated = datetime.today()
+            database.save_changes()
 
-    if status in ['updating', 'completed', 'failed']:
-        return status
+    if status == 'completed' or probe.has_been_updated:
+        time = util.get_textual_timedelta(datetime.today() - probe.last_updated)
+        return 'updated-{}'.format(time)
 
-    return 'has-been-updated' if probe.has_been_updated else 'has-not-been-updated'
+    return 'not-updated'
 
 
 #################################################################

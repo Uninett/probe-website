@@ -483,20 +483,21 @@ class DatabaseManager():
         """Revert database back to how it was at last save"""
         self.session.rollback()
 
-    def valid_network_configs(self, probe):
+    def valid_network_configs(self, probe, with_warning=False):
         """Returns true if 'probe's network config(s) has been filled out"""
         success = True
         for net_conf in probe.network_configs:
             # For now we just check for any (not two_g & and five_g), because
             # we don't use the two_g and five_g at the moment
             if net_conf.name == 'any' and not net_conf.is_filled():
-                message = settings.ERROR_MESSAGE['fill_out_network_credentials'].format(
-                    str(probe.name) + ' / ' + util.convert_mac(probe.custom_id, mode='display'))
-                flash(message, 'error')
+                if with_warning:
+                    message = settings.ERROR_MESSAGE['fill_out_network_credentials'].format(
+                        str(probe.name) + ' / ' + util.convert_mac(probe.custom_id, mode='display'))
+                    flash(message, 'error')
                 success = False
         return success
 
-    def valid_database_configs(self, user):
+    def valid_database_configs(self, user, with_warning=False):
         """Returns true if 'user's database config(s) has been filled out"""
         success = True
         for db_conf in user.databases:
@@ -505,8 +506,9 @@ class DatabaseManager():
             if (db_conf.status != 'disabled' and
                     db_conf.status != 'uninett' and
                     not db_conf.is_filled()):
-                message = settings.ERROR_MESSAGE['fill_out_database_credentials']
-                flash(message, 'error')
+                if with_warning:
+                    message = settings.ERROR_MESSAGE['fill_out_database_credentials']
+                    flash(message, 'error')
                 success = False
         return success
 

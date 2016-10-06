@@ -61,7 +61,10 @@ def export_to_inventory(username, database):
     with open(os.path.join(dir_path, username), 'w') as f:
         f.write('[{}]\n'.format(username))
         for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
-            if probe.associated and util.is_probe_connected(probe.port):
+            if (probe.associated and
+                    util.is_probe_connected(probe.port) and
+                    database.valid_network_configs(probe) and
+                    database.valid_database_configs(user)):
                 entry = '{} ansible_host=localhost ansible_port={} probe_name="{}"'.format(
                             probe.custom_id,
                             probe.port,
@@ -280,11 +283,12 @@ def _read_playbook_status(username):
         status['ansible'] = 'not-running'
         return status
 
+    completed = False
     with open(log_file, 'r') as log_f, open(inventory_file, 'r') as inv_f:
         log_cont = log_f.read()
         inv_cont = inv_f.read()
         # Ansible is done updating
-        if 'PLAY RECAP' in log_cont:
+        if 'PLAY RECAP' in log_cont and '--- PARSED ---' not in log_cont:
             # Matches lines like this, and extracts the numbers:
             # '12af4521deee               : ok=0    changed=0    unreachable=1    failed=0'
             regex = '([a-zA-Z0-9_-]+)\s+:\s+ok=([0-9]+)+\s+changed=([0-9]+)\s+unreachable=([0-9]+)+\s+failed=([0-9]+)+'
@@ -292,11 +296,19 @@ def _read_playbook_status(username):
             status = {name: int(unreachable)+int(failed) for name, ok, changed, unreachable, failed in probes}
             for key, value in status.items():
                 status[key] = 'completed' if value == 0 else 'failed'
+            completed = True
+            status['ansible'] = 'completed'
         # Ansible is running
         elif log_cont != '' and is_ansible_running(username):
             regex = '\n([a-zA-Z0-9_-]+) '
             probes = re.findall(regex, inv_cont)
             status = {name: 'updating' for name in probes}
+
+    # Only tag probes as completed once. After that, let them show the time of
+    # last update. (This is kind of a workaround, maybe fix later)
+    if completed:
+        with open(log_file, 'a') as f:
+            f.write('--- PARSED ---\n')
 
     status['timestamp'] = time.time()
     return status

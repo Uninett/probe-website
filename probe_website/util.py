@@ -2,6 +2,7 @@ from re import fullmatch
 from probe_website import settings
 from subprocess import call
 from os import kill
+from datetime import timedelta
 
 
 def is_mac_valid(mac):
@@ -136,3 +137,25 @@ def strip_id(data):
         if 'id' in entry:
             del entry['id']
     return data
+
+
+def get_textual_timedelta(time):
+    """Generates a textual representation of time passed for a timedelta object.
+
+    E.g. will a timedelta with 120 seconds be converted to "2 mins ago"
+    """
+    if type(time) is not timedelta:
+        return None
+
+    seconds = (time.seconds, 'second')
+    minutes = (seconds[0] / 60, 'minute')
+    hours = (minutes[0] / 60, 'hour')
+    days = (time.days, 'day')
+    weeks = (days[0] / 7, 'week')
+    months = (days[0] / 30, 'month')  # Estimate
+
+    for t in [months, weeks, days, hours, minutes]:
+        if t[0] >= 1:
+            return '{} {}{} ago'.format(int(t[0]), t[1], 's' if int(t[0]) >= 2 else '')
+
+    return 'just now'

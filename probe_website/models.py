@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean
+from sqlalchemy import Column, Integer, String, Boolean, DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy.orm import relationship
 from probe_website.database import Base
@@ -53,6 +53,7 @@ class Probe(Base):
     association_period_start = Column(Integer)
     associated = Column(Boolean)
     has_been_updated = Column(Boolean)
+    last_updated = Column(DateTime)
 
     user_id = Column(Integer, ForeignKey('users.id'))
     user = relationship('User', back_populates='probes')

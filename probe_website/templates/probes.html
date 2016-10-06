@@ -128,30 +128,27 @@
       function(data) {
         text = "";
         color = "";
-        switch(data) {
-          case "updating":
-            text = 'Updating...<img src="{{ url_for("static", filename="images/updating.gif") }}">'
-            color = "orange";
-            break;
-          case "completed":
-            text = "Completed";
-            color = "green";
-            break;
-          case "failed":
-            text = "Failed";
-            color = "red";
-            break;
-          case "has-been-updated":
-            text = "Has been updated";
-            color = "lime";
-            break;
-          case "has-not-been-updated":
-            text = "Has not been updated";
-            color = "black";
-            break;
-          default:
-            text = "Unknown";
-            color = "gray";
+        if(data.indexOf("updated") == 0) {
+          text = "Updated (" + data.slice(data.indexOf("-")+1) + ")";
+          color = "green";
+        } else {
+          switch(data) {
+            case "updating":
+              text = 'Updating...<img src="{{ url_for("static", filename="images/updating.gif") }}">'
+              color = "orange";
+              break;
+            case "failed":
+              text = "Failed";
+              color = "red";
+              break;
+            case "not-updated":
+              text = "Not updated";
+              color = "black";
+              break;
+            default:
+              text = "Unknown";
+              color = "gray";
+          }
         }
         $(element).html(text);
         $(element).attr("style", "color:" + color + ";");
