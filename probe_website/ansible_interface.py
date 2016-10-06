@@ -288,15 +288,21 @@ def _read_playbook_status(username):
         log_cont = log_f.read()
         inv_cont = inv_f.read()
         # Ansible is done updating
-        if 'PLAY RECAP' in log_cont and '--- PARSED ---' not in log_cont:
+        if 'PLAY RECAP' in log_cont:
             # Matches lines like this, and extracts the numbers:
             # '12af4521deee               : ok=0    changed=0    unreachable=1    failed=0'
             regex = '([a-zA-Z0-9_-]+)\s+:\s+ok=([0-9]+)+\s+changed=([0-9]+)\s+unreachable=([0-9]+)+\s+failed=([0-9]+)+'
             probes = re.findall(regex, log_cont)
             status = {name: int(unreachable)+int(failed) for name, ok, changed, unreachable, failed in probes}
             for key, value in status.items():
-                status[key] = 'completed' if value == 0 else 'failed'
-            completed = True
+                # Make the site always show the failed state if failed, i.e. do not
+                # go back to show the last time updated
+                if '--- PARSED ---' in log_cont:
+                    if value == 1:
+                        status[key] = 'failed'
+                else:
+                    status[key] = 'completed' if value == 0 else 'failed'
+                    completed = True
             status['ansible'] = 'completed'
         # Ansible is running
         elif log_cont != '' and is_ansible_running(username):
