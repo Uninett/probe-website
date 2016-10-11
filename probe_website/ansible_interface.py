@@ -65,9 +65,10 @@ def export_to_inventory(username, database):
                     util.is_probe_connected(probe.port) and
                     database.valid_network_configs(probe) and
                     database.valid_database_configs(user)):
-                entry = '{} ansible_host=localhost ansible_port={} probe_name="{}"'.format(
+                entry = '{} ansible_host=localhost ansible_port={} username="{}" probe_name="{}"'.format(
                             probe.custom_id,
                             probe.port,
+                            username,
                             probe.name)
                 f.write(entry + '\n')
 

@@ -116,7 +116,7 @@ class DatabaseManager():
 
     def add_default_databases(self, user):
         """Add InfluxDB and Elastic search as default databases for 'user'"""
-        self.add_database(user, 'influxdb', '', '', '', '', '', 'disabled')
+        self.add_database(user, 'influxdb', '', '', '', '', '', 'uninett')
         self.add_database(user, 'elastic', '', '', '', '', '', 'uninett')
 
     def load_default_scripts(self, probe, username):
