@@ -115,6 +115,17 @@ ID_VENDOR_ID=2001
 echo 'ACTION=="remove", ENV{ID_VENDOR_ID}=="'"${ID_VENDOR_ID}"'", ENV{ID_MODEL_ID}=="'"${ID_MODEL_ID}"'", RUN+="/sbin/shutdown -h now"' > ${MOUNT_DIR}/etc/udev/rules.d/00-dongle_shutdown.rules
 
 
+echo '[+] Adding connection status script'
+cat << EOF > ${MOUNT_DIR}/root/connection_status.sh
+#!/bin/bash
+
+eth=$([[ $(ifconfig eth0 | awk '/inet /{print $2}') == "" ]] && echo 0 || echo 1)
+wlan=$([[ $(ifconfig wlan0 | awk '/inet /{print $2}') == "" ]] && echo 0 || echo 1)
+
+printf '{"eth0":%d,"wlan0":%d}\n' $eth $wlan
+EOF
+
+
 echo "[+] Unmounting image"
 umount "${MOUNT_DIR}"
 

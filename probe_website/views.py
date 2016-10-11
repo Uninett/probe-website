@@ -386,14 +386,16 @@ def get_port():
 
 @app.route('/get_connection_status', methods=['GET'])
 def get_connection_status():
-    """Return the connection status on the SSH tunnel of the specified probe
+    """Return the eth & wlan connection status of the specified probe, 
 
     The only argument is mac, which should be the probe's MAC address
     Returned statuses will be either:
         invalid-mac
         unknown-mac
+        {"eth0": 0 or 1, "wlan0": 1 or 0}
+
+        For backwards compatibility:
         connected
-        not-connected
     """
     mac = request.args.get('mac', '')
     if mac == '':
@@ -405,8 +407,14 @@ def get_connection_status():
         return 'unknown-mac'
 
     status = util.is_probe_connected(probe.port)
+    if status:
+        con_stat = util.get_interface_connection_status(probe.port)
+        if con_stat is not None:
+            return con_stat
+        else:
+            return 'connected'
 
-    return 'connected' if status else 'not-connected'
+    return '{"eth0": 0, "wlan0": 0}'
 
 
 @app.route('/get_ansible_status', methods=['GET'])

@@ -1,8 +1,8 @@
 from re import fullmatch
 from probe_website import settings
-from subprocess import call
-from os import kill
+from subprocess import call, check_output, CalledProcessError
 from datetime import timedelta
+import json
 
 
 def is_mac_valid(mac):
@@ -125,6 +125,30 @@ def is_probe_connected(port):
     ret_code = call(command)
 
     return True if ret_code == 0 else False
+
+
+def get_interface_connection_status(port):
+    """Return a json string specifying whether the probe is connected
+    to the interntet via eth0 or wlan0 (or both).
+
+    Format of returned string: {"eth0": 0 or 1, "wlan0": 1 or 0}
+    """
+    command = ['ssh',
+               '-p', str(port),
+               '-o', 'UserKnownHostsFile={}/known_hosts'.format(settings.ANSIBLE_PATH),
+               'root@localhost',
+               '[ -f /root/connection_status.sh ] && /root/connection_status.sh']
+    try:
+        data = check_output(command, timeout=10).decode('utf-8')
+    except CalledProcessError:
+        return None
+
+    # Make sure the returned status is correct
+    status = json.loads(data)
+    if 'wlan0' in status and 'eth0' in status:
+        return data
+
+    return None
 
 
 def strip_id(data):
