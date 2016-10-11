@@ -451,6 +451,8 @@ def get_ansible_status():
             database.save_changes()
 
     if status == 'completed' or probe.has_been_updated:
+        if probe.last_updated is None:
+            probe.last_updated = datetime.today()
         time = util.get_textual_timedelta(datetime.today() - probe.last_updated)
         return 'updated-{}'.format(time)
 
