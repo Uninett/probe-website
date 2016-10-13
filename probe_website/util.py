@@ -138,9 +138,9 @@ def get_interface_connection_status(port):
     """
     command = ['ssh',
                '-p', str(port),
-               '-o', '"UserKnownHostsFile={}/known_hosts"'.format(settings.ANSIBLE_PATH),
+               '-o', 'UserKnownHostsFile={}/known_hosts'.format(settings.ANSIBLE_PATH),
                'root@localhost',
-               '"[ -f /root/connection_status.sh ] && /root/connection_status.sh"']
+               '"[ -e /root/connection_status.sh ] && /root/connection_status.sh"']
     try:
         data = check_output(command, timeout=10).decode('utf-8')
     except CalledProcessError:
