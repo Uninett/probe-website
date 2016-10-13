@@ -122,7 +122,10 @@ def is_probe_connected(port):
     # -z      Specifies that nc should just scan for listening daemons,
     #         without sending any data to them.
     command = ['nc', '-z', 'localhost', port]
-    ret_code = call(command)
+    try:
+        ret_code = call(command)
+    except:
+        return False
 
     return True if ret_code == 0 else False
 

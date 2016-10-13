@@ -4,6 +4,7 @@ import probe_website.database
 from probe_website.database import User, Probe
 from probe_website import settings, form_parsers, util
 from probe_website import ansible_interface as ansible
+from probe_website.oauth import DataportenSignin
 import flask_login
 from flask_login import current_user
 from collections import OrderedDict
@@ -46,19 +47,48 @@ def index():
 def login():
     """Render login page for GET requests. Authenticate and redirect to homepage
     for POST requests (if authentication was successful)."""
-    if request.method == 'POST':
-        username = request.form.get('username', '')
-        password = request.form.get('password', '')
+    return redirect(url_for('oauth_authorize'))
+    # if request.method == 'POST':
+    #     username = request.form.get('username', '')
+    #     password = request.form.get('password', '')
 
-        user = user_loader(username)
+    #     user = user_loader(username)
 
-        if user is not None and user.check_password(password):
-            flask_login.login_user(user)
-            return redirect(url_for('index'))
-        else:
-            flash('Invalid login', 'error')
+    #     if user is not None and user.check_password(password):
+    #         flask_login.login_user(user)
+    #         return redirect(url_for('index'))
+    #     else:
+    #         flash('Invalid login', 'error')
 
-    return render_template('login.html')
+    # return render_template('login.html')
+
+
+@app.route('/__oauth/authorize')
+def oauth_authorize():
+    if flask_login.current_user.is_authenticated:
+        return redirect(url_for('index'))
+    oauth = DataportenSignin()
+    return oauth.authorize()
+
+
+@app.route('/__oauth/callback')
+def oauth_callback():
+    if flask_login.current_user.is_authenticated:
+        return redirect(url_for('index'))
+    oauth = DataportenSignin()
+
+    print(oauth.callback())
+    # social_id, username, email = oauth.callback()
+    # if social_id is None:
+    #     flash('Authentication failed.')
+    #     return redirect(url_for('index'))
+    # user = User.query.filter_by(social_id=social_id).first()
+    # if not user:
+    #     user = User(social_id=social_id, nickname=username, email=email)
+    #     db.session.add(user)
+    #     db.session.commit()
+    # login_user(user, True)
+    return redirect(url_for('index'))
 
 
 @app.route('/logout')

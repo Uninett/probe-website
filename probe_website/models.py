@@ -20,6 +20,7 @@ class User(Base, UserMixin):
     contact_person = Column(String(256))
     contact_email = Column(String(256))
     admin = Column(Boolean)
+    oauth_id = Column(String(512))
 
     def __init__(self, username, password, contact_person, contact_email, admin=False):
         self.username = username
