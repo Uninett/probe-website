@@ -56,7 +56,7 @@
               {% endif %}
 
             <li {% if request.url_rule.endpoint == "logout" %}class="active"{% endif %}>
-            <a href="{{ url_for('logout') }}">Logout (as {{ current_user.username }})</a>
+            <a href="{{ url_for('logout') }}">Log out (as {{ current_user.username }})</a>
             </li>
             {% else %}
             <li {% if request.url_rule.endpoint == "login" %}class="active"{% endif %}>

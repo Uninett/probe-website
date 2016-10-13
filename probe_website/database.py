@@ -61,12 +61,12 @@ class DatabaseManager():
         """Close the database"""
         self.session.remove()
 
-    def add_user(self, username, password, contact_person, contact_email, admin=False):
+    def add_user(self, username, password, contact_person, contact_email, admin=False, oauth_id=None):
         """Add a new user to the database"""
         if len(self.session.query(User).filter(User.username == username).all()) != 0:
             return False
 
-        user = User(username, password, contact_person, contact_email, admin)
+        user = User(username, password, contact_person, contact_email, admin, oauth_id)
         self.session.add(user)
         self.add_default_databases(user)
         self.save_changes()

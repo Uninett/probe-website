@@ -6,6 +6,14 @@
 
 <h1>Login</h1>
 
+<p style="padding:20px;">
+  <a href="{{ url_for('oauth_authorize') }}">
+    <button type="button" class="btn btn-primary btn-lg" name="feide_login">Log in with Feide</button>
+  </a>
+</p>
+
+<p style="padding:30px;">or if you have a pre-made account:</p>
+
 <form class="form-horizontal" method="POST">
 
   <div class="form-group">
@@ -26,7 +34,7 @@
     </div>
   </div>
 
-  <button type="submit" class="btn btn-lg btn-default" name="login">Login</button>
+  <button type="submit" class="btn btn-lg btn-default" name="login">Log in</button>
 </form>
 
 {% endblock %}

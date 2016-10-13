@@ -22,11 +22,12 @@ class User(Base, UserMixin):
     admin = Column(Boolean)
     oauth_id = Column(String(512))
 
-    def __init__(self, username, password, contact_person, contact_email, admin=False):
+    def __init__(self, username, password, contact_person, contact_email, admin=False, oauth_id=None):
         self.username = username
         self.contact_person = contact_person
         self.contact_email = contact_email
         self.admin = admin
+        self.oauth_id = oauth_id
 
         self.set_password(password)
 
