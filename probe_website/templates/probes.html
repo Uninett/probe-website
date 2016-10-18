@@ -32,9 +32,27 @@
 
         {% for probe in probes %}
           <tr>
+            {% if probe.associated %}
+            <td>
+              <a href="https://wifiprobeelk.labs.uninett.no/app/kibana#/dashboard/{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'org:{{ organization }}%20AND%20name:{{ probe.name }}')))">
+              {{ probe.name }}
+              </a>
+            </td>
+            <td>
+              <a href="https://wifiprobeelk.labs.uninett.no/app/kibana#/dashboard/{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'mac:{{ probe.storage_id }}')))">
+              {{ probe.id }}
+              </a>
+            </td>
+            <td>
+              <a href="https://wifiprobeelk.labs.uninett.no/app/kibana#/dashboard/{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'org:{{ organization }}%20AND%20location:{{ probe.location }}')))">
+              {{ probe.location }}
+              </a>
+            </td>
+            {% else %}
             <td>{{ probe.name }}</td>
             <td>{{ probe.id }}</td>
             <td>{{ probe.location }}</td>
+            {% endif %}
             <td>
               <form method="POST">
                 <input type="hidden" name="probe_id" value="{{ probe.id }}"/>

@@ -153,6 +153,7 @@ def probes():
         - Renew a probe's association period (if not already associated)
         - Push configurations to probes (i.e. run Ansible)
     """
+    user = database.get_user(current_user.username)
     if request.method == 'POST':
         action = request.form.get('action', '')
         if action == 'new_probe':
@@ -175,7 +176,6 @@ def probes():
             # Only run one instance of Ansible at a time (for each user)
             if not ansible.is_ansible_running(current_user.username):
                 # Export configs in the sql database to ansible readable configs
-                user = database.get_user(current_user.username)
                 for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
                     # Export script config
                     data = util.strip_id(database.get_script_data(probe))
@@ -205,7 +205,10 @@ def probes():
                 flash(settings.INFO_MESSAGE['ansible_already_running'], 'info')
 
     probes = database.get_all_probes_data(current_user.username)
-    return render_template('probes.html', probes=probes)
+    return render_template('probes.html',
+                           probes=probes,
+                           kibana_dashboard='probe-stats',
+                           organization=user.get_organization())
 
 
 @app.route('/probe_setup', methods=['GET', 'POST'])
@@ -449,7 +452,6 @@ def get_connection_status():
     status = util.is_probe_connected(probe.port)
     if status:
         con_stat = util.get_interface_connection_status(probe.port)
-        print(probe.name, con_stat)
         if con_stat is not None:
             return con_stat
         else:
