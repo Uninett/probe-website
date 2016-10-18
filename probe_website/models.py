@@ -41,7 +41,7 @@ class User(Base, UserMixin):
     def get_organization(self):
         """Return organization name of user, parsed from user's email."""
         reg = re.match('[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+)\\.[a-zA-Z]{2,}', self.contact_email)
-        if reg is not None:
+        if reg is not None and reg.group(1) != '':
             return reg.group(1)
         return 'unknown'
 
