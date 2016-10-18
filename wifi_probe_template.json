@@ -1,0 +1,162 @@
+{
+  "template": "wifi-probe-uninett-*",
+  "settings": {
+    "float_of_shards": 1
+  },
+  "mappings": {
+    "_default_": {
+      "_all": {
+        "enabled": false
+      },
+      "date_detection": false,
+      "properties": {
+        "@timestamp": {
+          "type": "date",
+          "index": "not_analyzed"
+        },
+
+        "name": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "mac": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "location": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "ord": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+
+        "bwdo_v4_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "bwup_v4_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "cells_2g_freq": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_2ghz": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_2ghz_edur": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_2ghz_edur": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_5g_freq": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_5ghz": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_5ghz_edur": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_edur": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_num_mast": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_tota": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_uniq_chan": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_uniq_radi": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "cells_uniq_ssid": {
+          "type": "integer",
+          "index": "not_analyzed"
+        },
+        "dhcp_time_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "dns_v4_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "dns_v6_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "http_v4_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "http_v6_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ipv6_any": {
+          "type": "boolean",
+          "index": "not_analyzed"
+        },
+        "rttv4_avg_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "rttv4_max_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "rttv4_min_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "uptime": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "wifi_apid_any": {
+          "type": "string",
+          "index": "not_analyzed"
+        },
+        "wifi_asso_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "wifi_conn_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "wifi_freq_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "wifi_qual_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "wifi_sign_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        }
+      }
+    }
+  }
+}

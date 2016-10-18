@@ -174,13 +174,21 @@ def probes():
         elif action == 'push_config':
             # Only run one instance of Ansible at a time (for each user)
             if not ansible.is_ansible_running(current_user.username):
-                # Export the script configs in the sql database to ansible readable configs
+                # Export configs in the sql database to ansible readable configs
                 user = database.get_user(current_user.username)
                 for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
+                    # Export script config
                     data = util.strip_id(database.get_script_data(probe))
                     ansible.export_host_config(probe.custom_id,
                                                {'host_script_configs': data},
                                                'script_configs')
+                    # Export probe info config
+                    ansible.export_host_config(probe.custom_id,
+                                               {'probe_name': probe.name,
+                                                'probe_location': probe.location,
+                                                'probe_mac': probe.custom_id,
+                                                'probe_organization': user.get_organization()},
+                                               'probe_info')
 
                     if (probe.associated and
                             util.is_probe_connected(probe.port) and
@@ -418,7 +426,7 @@ def get_port():
 
 @app.route('/get_connection_status', methods=['GET'])
 def get_connection_status():
-    """Return the eth & wlan connection status of the specified probe, 
+    """Return the eth & wlan connection status of the specified probe,
 
     The only argument is mac, which should be the probe's MAC address
     Returned statuses will be either:
@@ -441,6 +449,7 @@ def get_connection_status():
     status = util.is_probe_connected(probe.port)
     if status:
         con_stat = util.get_interface_connection_status(probe.port)
+        print(probe.name, con_stat)
         if con_stat is not None:
             return con_stat
         else:

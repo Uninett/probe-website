@@ -29,3 +29,6 @@ Match User dummy
     (will need to be root)
     - mkdir /etc/wifi_probing
     - add '/abs/path/to/database.db' to the file /etc/wifi_probing/db_path.txt
+
+7. Push template to elasticsearch
+    - curl -XPUT localhost:9200/_template/wifi_probe_template -d "$(<wifi_probe_template.json)"

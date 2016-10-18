@@ -6,9 +6,10 @@ from flask_login import UserMixin
 from werkzeug.security import generate_password_hash, check_password_hash
 from time import time
 from probe_website.settings import PROBE_ASSOCIATION_PERIOD
+import re
 
 # All classes in this module inherits from a SQL Alchemy class,
-# and defines how to database tables should look. They also function
+# and defines how the database tables should look. They also function
 # as "normal" classes, so they are not used solely for SQL Alchemy
 
 
@@ -36,6 +37,13 @@ class User(Base, UserMixin):
 
     def check_password(self, password):
         return check_password_hash(self.pw_hash, password)
+
+    def get_organization(self):
+        """Return organization name of user, parsed from user's email."""
+        reg = re.match('[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+)\\.[a-zA-Z]{2,}', self.contact_email)
+        if reg is not None:
+            return reg.group(1)
+        return 'unknown'
 
     # This is a method override from UserMixin
     def get_id(self):
