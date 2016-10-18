@@ -142,7 +142,8 @@ def get_interface_connection_status(port):
                'root@localhost',
                '"[ -e /root/connection_status.sh ] && /root/connection_status.sh"']
     try:
-        data = check_output(command, timeout=10).decode('utf-8')
+        # Fails if not run as shell
+        data = check_output(' '.join(command), shell=True, timeout=10).decode('utf-8')
     except CalledProcessError:
         return None
 
