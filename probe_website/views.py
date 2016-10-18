@@ -428,6 +428,7 @@ def get_port():
 
 
 @app.route('/get_connection_status', methods=['GET'])
+@flask_login.login_required
 def get_connection_status():
     """Return the eth & wlan connection status of the specified probe,
 
@@ -461,6 +462,7 @@ def get_connection_status():
 
 
 @app.route('/get_ansible_status', methods=['GET'])
+@flask_login.login_required
 def get_ansible_status():
     """Return the status on the current ansible update
 
