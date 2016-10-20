@@ -142,10 +142,9 @@ def get_interface_connection_status(port):
                '-p', str(port),
                '-o', 'UserKnownHostsFile={}/known_hosts'.format(settings.ANSIBLE_PATH),
                'root@localhost',
-               "'[ -e /root/connection_status.sh ] && /root/connection_status.sh'"]
+               '[ -e /root/connection_status.sh ] && /root/connection_status.sh']
     try:
-        # Fails if not run as shell
-        data = subprocess.check_output(' '.join(command), shell=True, timeout=20).decode('utf-8')
+        data = subprocess.check_output(command, timeout=20).decode('utf-8')
     except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return None
 
