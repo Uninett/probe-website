@@ -1,8 +1,9 @@
 from re import fullmatch
 from probe_website import settings
-from subprocess import call, check_output, CalledProcessError
+import subprocess
 from datetime import timedelta
 import json
+import os
 
 
 def is_mac_valid(mac):
@@ -121,9 +122,10 @@ def is_probe_connected(port):
     # From netcat manpage:
     # -z      Specifies that nc should just scan for listening daemons,
     #         without sending any data to them.
+    FNULL = open(os.devnull, 'w')
     command = ['nc', '-z', 'localhost', port]
     try:
-        ret_code = call(command)
+        ret_code = subprocess.call(command, stdout=FNULL, stderr=subprocess.STDOUT, close_fds=True)
     except:
         return False
 
@@ -140,11 +142,11 @@ def get_interface_connection_status(port):
                '-p', str(port),
                '-o', 'UserKnownHostsFile={}/known_hosts'.format(settings.ANSIBLE_PATH),
                'root@localhost',
-               '"[ -e /root/connection_status.sh ] && /root/connection_status.sh"']
+               "'[ -e /root/connection_status.sh ] && /root/connection_status.sh'"]
     try:
         # Fails if not run as shell
-        data = check_output(' '.join(command), shell=True, timeout=10).decode('utf-8')
-    except CalledProcessError:
+        data = subprocess.check_output(' '.join(command), shell=True, timeout=20).decode('utf-8')
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return None
 
     # Make sure the returned status is correct
