@@ -35,6 +35,10 @@ depmod
 modprobe 8812au
 
 
+echo "[+] Make connection status script executable"
+chmod +x /root/connection_status.sh
+
+
 echo "[+] Installing necessary programs"
 # To avoid being presented with stuff like ncurses dialogs, that
 # will halt the installation
@@ -75,7 +79,7 @@ host_key=$(ssh-keyscan -t rsa localhost)
 
 while true; do
     echo "[~] Attempting to register ssh key with server"
-    resp=$(curl -s "http://${SERVER_ADDRESS}/register_key" --data-urlencode "mac=${mac}" --data-urlencode "pub_key=${pub_key}" --data-urlencode "host_key=${host_key}")
+    resp=$(curl -s "https://${SERVER_ADDRESS}/register_key" --data-urlencode "mac=${mac}" --data-urlencode "pub_key=${pub_key}" --data-urlencode "host_key=${host_key}")
 
     if [[ "${resp}" != "success" ]]; then
         log_error "Error when registering key: ${resp}"
@@ -99,7 +103,7 @@ done
 
 while true; do
     echo "[~] Asking server for available ssh port"
-    ssh_port=$(curl -s "http://${SERVER_ADDRESS}/get_port?mac=${mac}")
+    ssh_port=$(curl -s "https://${SERVER_ADDRESS}/get_port?mac=${mac}")
     if [[ ! "${ssh_port}" =~ [0-9]{1,5} ]]; then
         log_error "Error when querying for port: ${ssh_port}"
         if [[ "${ssh_port}" == "invalid-mac" ]]; then
