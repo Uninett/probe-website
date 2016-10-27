@@ -183,6 +183,14 @@
         "wifi_sign_any": {
           "type": "float",
           "index": "not_analyzed"
+        },
+        "wifi_dbm_sign_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ssid_list": {
+          "type": "string",
+          "index": "not_analyzed"
         }
       }
     }
