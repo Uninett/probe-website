@@ -116,7 +116,7 @@ echo 'ACTION=="remove", ENV{ID_VENDOR_ID}=="'"${ID_VENDOR_ID}"'", ENV{ID_MODEL_I
 
 
 echo '[+] Adding connection status script'
-cat << EOF > ${MOUNT_DIR}/root/connection_status.sh
+cat << 'EOF' > ${MOUNT_DIR}/root/connection_status.sh
 #!/bin/bash
 
 eth=$([[ $(ifconfig eth0 | awk '/inet /{print $2}') == "" ]] && echo 0 || echo 1)
