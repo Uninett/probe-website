@@ -15,7 +15,15 @@ ssh_port=$3
 
 # Find IP of default gateway for eth0, and IP for host to connect to
 default_eth_gateway=$(ip route | awk '/default.*eth0/{ print $3 }')
-server_addr=$(dig +short A $server_host @158.38.0.1)
+server_addr=$(dig +short A $server_host @158.38.0.1 | grep -oE '^([0-9]{1,3}.){3}[0-9]{1,3}$')
+if [[ "$server_addr" != "" ]]; then
+    echo -n "$server_addr" > /root/init/server_addr
+elif [[ -f /root/init/server_addr ]]; then
+    server_addr=$(</root/init/server_addr)
+else
+    echo "Unable to fetch server address"
+    exit 1
+fi
 
 # Create a hook that prevents dhclient from overwriting resolv.conf,
 # if it is running for eth0 (wlan0 can overwrite)
@@ -34,10 +42,10 @@ fi
 
 # Change the ip routing tables such that the only possible outgoing connection done
 # via eth0 is to the server
-if [[ $default_eth_gateway != "" ]]; then
+if [[ "$default_eth_gateway" != "" && "$server_addr" != "" ]]; then
     ip route add $server_addr via $default_eth_gateway dev eth0
     route del default gw $default_eth_gateway
 fi
 
 # Start the ssh connection
-ssh -N -T -o "ExitOnForwardFailure yes" -L 9200:wifiprobeelk.labs.uninett.no:9200 -R${ssh_port}:localhost:22 ${server_user}@${server_addr}                                                                
+ssh -N -T -o "ExitOnForwardFailure yes" -o "StrictHostKeyChecking no" -L 9200:wifiprobeelk.labs.uninett.no:9200 -R${ssh_port}:localhost:22 ${server_user}@${server_addr}                                                                
