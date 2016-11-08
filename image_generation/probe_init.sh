@@ -50,7 +50,7 @@ if [[ ! $(apt-get update) ]]; then
     exit 1
 fi
 
-apt-get --yes --allow-unauthenticated install autossh curl
+apt-get --yes --allow-unauthenticated install autossh curl dnsutils
 
 
 if [[ ! -f ~/.ssh/id_rsa ]]; then
