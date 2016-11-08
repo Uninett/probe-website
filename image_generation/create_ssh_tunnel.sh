@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# dig requires dnsutils to be installed
+
+USAGE="$0 <server_user> <server_hostname> <ssh_port>"
+
+if [[ $# != 3 ]]; then
+    echo "$USAGE"
+    exit 1
+fi
+
+server_user="$1"
+server_host="$2"
+ssh_port=$3
+
+# Find IP of default gateway for eth0, and IP for host to connect to
+default_eth_gateway=$(ip route | awk '/default.*eth0/{ print $3 }')
+server_addr=$(dig +short A $server_host @158.38.0.1)
+
+# Create a hook that prevents dhclient from overwriting resolv.conf,
+# if it is running for eth0 (wlan0 can overwrite)
+dhclient_hook="/etc/dhcp/dhclient-enter-hooks.d/nodnsupdate"
+if [ ! -f $dhclient_hook ]; then
+cat << 'EOF' > $dhclient_hook
+#!/bin/bash
+if [ "$interface" = "eth0" ]; then
+make_resolv_conf(){
+	:
+}
+fi
+EOF
+chmod +x $dhclient_hook
+fi
+
+# Change the ip routing tables such that the only possible outgoing connection done
+# via eth0 is to the server
+if [[ $default_eth_gateway != "" ]]; then
+    ip route add $server_addr via $default_eth_gateway dev eth0
+    route del default gw $default_eth_gateway
+fi
+
+# Start the ssh connection
+ssh -N -T -o "ExitOnForwardFailure yes" -L 9200:wifiprobeelk.labs.uninett.no:9200 -R${ssh_port}:localhost:22 ${server_user}@${server_addr}                                                                

@@ -60,8 +60,12 @@ mount -o loop,offset=${offset} "${FILENAME}" "${MOUNT_DIR}"
 
 echo "[+] Transferring init script & pub ssh key"
 mkdir -p "${MOUNT_DIR}/root/init/"
+
 cp "probe_init.sh" "${MOUNT_DIR}/root/init/probe_init.sh"
 chmod +x "${MOUNT_DIR}/root/init/probe_init.sh"
+cp "create_ssh_tunnel.sh" "${MOUNT_DIR}/root/init/create_ssh_tunnel.sh"
+chmod +x "${MOUNT_DIR}/root/init/create_ssh_tunnel.sh"
+
 cp "${MAIN_PUBKEY}" "${MOUNT_DIR}/root/init/main_key.pub"
 
 

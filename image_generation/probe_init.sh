@@ -120,7 +120,6 @@ done
 echo "[+] Generating autossh systemd unit file & enabling it"
 # Separate host & port (for address like 192.168.0.1:12345)
 server_host=$(echo "${SERVER_ADDRESS}" | sed 's/:.*//g')
-autossh_cmd="autossh -M 0 -N -T -R${ssh_port}:localhost:22 ${SERVER_USER}@${server_host}"
 
 cat << EOF > /etc/systemd/system/reverse_ssh.service
 [Unit]
@@ -130,7 +129,7 @@ After=network.target network-online.target
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/autossh -M 0 -N -T -o "ExitOnForwardFailure yes" -L 9200:wifiprobeelk.labs.uninett.no:9200 -R${ssh_port}:localhost:22 ${SERVER_USER}@${server_host}
+ExecStart=/root/init/create_ssh_tunnel.sh ${SERVER_USER} ${server_host} ${ssh_port}
 Restart=always
 RestartSec=30
 
