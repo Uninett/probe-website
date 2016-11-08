@@ -54,4 +54,4 @@ INFO_MESSAGE = {
         # )
 }
 
-PROBE_ASSOCIATION_PERIOD = 20*60  # In seconds, i.e. 20*60 = 20 minutes
+PROBE_ASSOCIATION_PERIOD = 40*60  # In seconds, i.e. 20*60 = 20 minutes
