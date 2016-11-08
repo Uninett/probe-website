@@ -44,9 +44,9 @@ This page contains instructions on how to set up probes.
       </ol>
     </li>
     <li>If the network credentials have already been added, you can now click on 'Push configuration to probes' to update the probes with the added information. This can take a while. Note that you should wait for all your probes to be associated before doing this, as all associated probes will be updated at once.</li>
-    <li>After the update is done ('Update status' says completed), power off the RPi by disconnecting/pulling out the <em>WiFi dongle</em>. This will initiate a shutdown procedure, and is how the probe must be shut down to avoid file corruption. After the green light on the RPi stops blinking (will take a few seconds), you can cut the power and remove the ethernet cable. Don't forget to plug the WiFi dongle back in.</li>
-    <li>The probe will automatically start measuring the network next time power is connected, <em>as long as no ethernet cable is connected</em>. This is to avoid doing measurements over cable instead of WiFi.</li>
-    <li>Further updates can be pushed over WiFi without the ethernet cable being present, though there may be some connectivity issues. If an update fails, it may work to just try again.</li>
+    <li>After the update is done ('Update status' says completed), power off the RPi by disconnecting/pulling out the <em>WiFi dongle</em>. This will initiate a shutdown procedure, and is how the probe must be shut down to avoid file corruption and ensure proper disconnection with the server. After the green light on the RPi stops blinking (will take a few seconds), you can cut the power and remove the ethernet cable. Don't forget to plug the WiFi dongle back in.</li>
+    <li>The probe will automatically start measuring the network next time power is connected, as long as the WiFi dongle is connected (the ethernet cable can be either connected or disconnected)</li>
+    <li>Further updates can be pushed over WiFi without the ethernet cable being present, though there may be some connectivity issues. So it's best to have both the dongle and an ethernet cable connected. If an update fails when only connected over WiFi, it may work to just try again.</li>
   </ol>
 </div>
 {% endblock %}
