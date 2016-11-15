@@ -491,7 +491,7 @@ def get_ansible_status():
     if status == 'completed':
         probe.has_been_updated = True
         if (probe.last_updated is None or
-                (datetime.today() - probe.last_updated).seconds >= 60):
+                (datetime.today() - probe.last_updated).total_seconds() >= 60):
             probe.last_updated = datetime.today()
             database.save_changes()
 
