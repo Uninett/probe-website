@@ -40,6 +40,14 @@
           "type": "float",
           "index": "not_analyzed"
         },
+        "bwdo_v6_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "bwup_v6_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
         "owj_v4_any": {
           "type": "float",
           "index": "not_analyzed"
