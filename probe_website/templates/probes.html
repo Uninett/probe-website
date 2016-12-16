@@ -34,17 +34,17 @@
           <tr>
             {% if probe.associated %}
             <td>
-              <a href="https://wifiprobeelk.labs.uninett.no/app/kibana#/dashboard/{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'org:{{ organization }}%20AND%20name:{{ probe.name }}')))">
+              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'org:{{ organization }}%20AND%20name:{{ probe.name }}')))">
               {{ probe.name }}
               </a>
             </td>
             <td>
-              <a href="https://wifiprobeelk.labs.uninett.no/app/kibana#/dashboard/{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'mac:{{ probe.storage_id }}')))">
+              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'mac:{{ probe.storage_id }}')))">
               {{ probe.id }}
               </a>
             </td>
             <td>
-              <a href="https://wifiprobeelk.labs.uninett.no/app/kibana#/dashboard/{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'org:{{ organization }}%20AND%20location:{{ probe.location }}')))">
+              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'org:{{ organization }}%20AND%20location:{{ probe.location }}')))">
               {{ probe.location }}
               </a>
             </td>
