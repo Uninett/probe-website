@@ -9,7 +9,7 @@ date: Last updated 2016-08-19
 This document is meant as a technical documentation on how the WiFi probing
 system works as a whole. It is meant to give an overview of the system, and not
 necessarily explain the minute details of each operation. For that you can
-check out the code, as it also contains som documentation. Also check out the
+check out the code, as it also contains some documentation. Also check out the
 latest presentation uploaded together with this document, as it contains a good
 bit of documentation too, especially in the form of flowcharts and pictures.
 
@@ -17,7 +17,7 @@ The project mainly consists of the following parts:
 
 - Linux image generation
 - Various scripts for probe initialization
-- Website for adding and administrating probes
+- Website for adding and administering probes
 - Ansible setup for pushing configs inserted in website
 - Scripts for probing the WiFi, and a program for controlling the scripts and
   submitting measured data
@@ -58,6 +58,7 @@ components:
 - Server's hostname/address 
 - WiFi driver (for MAC retrieval)
 - WiFi dongle shutdown script (see [The WiFi dongle shutdown script][])
+- Connection status script (used to show probe's connection status on the website)
 
 After the image has been generated, it can be burned to an SD card by doing
 something like:
@@ -89,9 +90,9 @@ so either a DNS record or IP address.
 Do note that the compilation can take some time. On my (average) laptop it
 takes about 1 hour.
 
-Also, there should already be a compiled driver for the 4.1.9 (4.1.9-v7) kernel
-version in the image_generation directory. So if that is the kernel version being
-used, you can just use that instead of compiling a new one.
+Also, there should already be a compiled driver for the 4.1.9 (4.1.9-v7 for
+rpi2/3) kernel version in the image_generation directory. So if that is the 
+kernel version being used, you can just use that instead of compiling a new one.
 
 ## The WiFi dongle shutdown script
 Because the Raspberry Pi has no off-switch, there's no easy way to shut it down
@@ -115,20 +116,25 @@ script preloaded into the Linux image. This script can be found in
 image_generation/probe_init.sh. It essentially does the following things:
 
 - Activate WiFi driver
-- Install curl & autossh
+- Install curl & dnsutils (for dig)
 - Generate SSH key pair
 - Gather wlan0 MAC address
 - Register pub SSH key with server (identify with MAC) (see [Association][])
-- If registration successful, receive a port number (see [SSH port query][])
+- If registration is successful, receive a port number (see [SSH port query][])
 - Generate an autossh command (rev. SSH) with the received port, and 
   wrap it in a systemd unit file
-- Initiate SSH tunnel to dummy user on server and idle (the tunnel
-  will be degenerate -> /bin/false as shell) (see [The SSH tunnel procedure][])
+- Generate a systemd unit file that runs the create_ssh_tunnel.sh script
+    - In addition to connecting to the server via ssh, this script also modifies
+      the network routing table to make sure only the connection to the server
+      goes over eth0 (if available), while everything else goes over wlan0
+      (measurements etc.)
+- Initiate SSH tunnel to dummy user on server by starting systemd unit file and idle 
+  (the tunnel will be degenerate -> /bin/false as shell) (see [The SSH tunnel procedure][])
 
 If association with the server is not successful (e.g. if the probe has not
 been registered yet), the probe will just keep on trying.
 
-At this stage the proe *must* be connected to the internet via ethernet,
+At this stage the probe *must* be connected to the internet via ethernet,
 because it currently has no WiFi credentials to use.
 
 # Website
@@ -153,7 +159,9 @@ For regular users:
     should be run at all)
 - Edit/remove probes
 - Add database information
-    - Currently only InfluxDB available
+    - Only necessary if the user does not want to use UNINETT's provided elastic
+      search instance
+- Follow link to see data in Kibana
 
 For probes (see [Probe association API][]):
 
@@ -162,7 +170,7 @@ For probes (see [Probe association API][]):
 
 The website's back-end is written in Python 3 and uses the Flask web framework. The
 front-end uses templated HTML files (Jinja2) and the Bootstrap CSS framework.
-All data submitted to the website will be saved in a SQL database.
+All data submitted to the website will be saved in an SQLite3 database.
 
 ## Website Setup
 The server requires some configuration before it can be used as a server for
@@ -174,7 +182,8 @@ for apache/nginx, further configuration will be needed.
 The script needs no arguments, but must be run as root (pretty much everything
 is does requires root priveliges). The script does the following tasks:
 
-- Install required programs
+- Install required programs (NB: At least Ansible 2.x is needed. If only Ansible
+  1.x is in the repo, Ansible 2.x will need to be manually installed).
 - Make a system user called Dummy
 - Generate SSH keys for Dummy and move them to his home directory
 - Copy get_probe_keys.sh to /usr/bin that will read the web sites SQL database to
@@ -213,7 +222,8 @@ address from now on.
 
 NB: All references to MAC addresses in this document refer to the WiFi dongle's
 MAC address, which will be seen as the MAC address of the wlan0 interface in
-Linux.
+Linux. Also note that the internal WiFi card present on the RPi 3 is disabled to
+avoid conflicts.
 
 The probe sends a POST request with the following key/value pairs:
 
@@ -234,9 +244,9 @@ The server will return one of the following responses:
 | success                     | The keys were successfully registered/associated
 |                             | with the corresponding MAC address
 
-When a probe is added through the web interface, it gets an initial 20 minutes
+When a probe is added through the web interface, it gets an initial 40 minutes
 of association time. If no probe associates with the corresponding MAC address
-within that time, the the association time will expire, and the server will not
+within that time, then the association time will expire, and the server will not
 accept any keys sent afterwards. This is to prevent a potentially malicious
 person from registering his own probe before the real user has gotten time to do it,
 e.g. if the user waits a long time before connecting the RPi to the internet
@@ -264,10 +274,9 @@ The server will return one of the following responses:
 | [port]                      | Returns the queried port (a valid MAC was     
 |                             | received)                                     
 
-When the probe received the network port, it will construct an SSH command with
-it. This command will be wrapped in an autossh command, which again will be wrapped in a
-systemd unit file, to prevent the SSH tunnel from breaking (as far as
-possible).
+Wher the probe receives the network port, it will construct an SSH command with
+it. This command ill be wrapped in a systemd unit file that automatically restarts 
+if the script fails, to prevent the SSH tunnel from breaking (as far as possible).
 
 ### The SSH tunnel procedure
 This section explains the complete procedure the server and probe goes
@@ -285,12 +294,12 @@ wlan0 MAC address for identification.
 key is saved as an *authorized key* for DUMMY
 
 In the end: both machines will be known to each other. PROBE will be
-authorized to start a degenerate SSH tunnel to DUMMY, while MAIN will be
-authorized to use the SSH tunnel to login to PROBE.
+authorized to start a degenerate SSH tunnel to DUMMY (no tty allowed), 
+while MAIN will be authorized to use the SSH tunnel to login to PROBE.
 
 ## Probe status
 After adding a probe through the web interface, three statuses will appear (see
-image in presentation mentioned in introduction).
+image in presentation mentioned in introduction, or just log in to the website).
 
 The first status is for association. It will be green if the probe has been
 associated, i.e. has sent it's SSH key and host key. It will be yellow if it
@@ -298,39 +307,26 @@ has not been associated and the server is waiting for association. It will be
 red if the association time has expired.
 
 The second status show whether the probe is connected to the server, i.e. there
-exists an SSH tunnel at the port designated to the probe. It will either say
-"Connected" or "Not connected".
+exists an SSH tunnel at the port designated to the probe. It will also show
+whether eth0 or wlan0 is up. If only eth0 is up, something is wrong as the probe
+will not be able to make measurements. If only wlan0 is up, that's okay, as the
+probe doesn't have to connect to the server through eth0 (it can use wlan0 too).
 
-The third status tells whether an update is in progress, i.e. whether Ansible
-is running or not, or the result after completion. It will say "Not running" if
-an update has not been run, or if the probe was not included in the last
-update. It will say "Updating..." if Ansible is running, "Completed" if Ansible
-completed successfully, and "Failed" if an error occured while updating for
-that particular probe.
+The third status tells whether a probe has been updates or not, and if it is
+currently updating. It will show "Not updated" if the probe has never been
+updates. It will show "Updating..." if an update is currently in progress.
+Otherwise it will show the time since the probe was last updated. If an update
+fails, it will say "Failed". This will in most cases make the probe stop doing
+measurements.
 
 ## Complete registration procedure
-This is the complete procedure a user has to go through to register a probe.
-Note that some steps can be done before or after another, e.g. it doesn't
-matter if the probe has been registered on the website before it is connected
-to the internet. But the following procedure is one that works well:
+See the Instructions tab on the website for instructions on the how register
+probes.
 
-1. Get website account from Uninett.
-2. Log in to website.
-3. Add database information (InfluxDB).
-4. Register probes (initally just need name, MAC and location, but will later
-   at least need WiFi credentials).
-5. Download image, burn it to an SD card and insert it in a RPi.
-6. Insert the WiFi dongle in the RPi and connect the RPi to the internet via
-   ethernet.
-7. Wait until all probes have associated with the server.
-8. Click the button on the website to push the configurations, and wait for it
-   to complete.
-9. When the update is done, eject the WiFi dongle (this will shut down the
-   probe) and ethernet cable. Wait a few seconds for the RPi to fully shut
-down. When the green light on the board shines constant green, the power can be
-removed.
-10. The RPi will start probing next time power is connected, *and* no ethernet
-    cable is present.
+## View collected data
+If the default database is used (UNINETT's ElasticSearch instance), users can
+view the collected data in Kibana by clicking on the MAC address in the Probes
+tab on the website. This will redirect them to Kibana.
 
 # Ansible
 Ansible is what actually converts the RPis to WiFi probes (i.e. installs the
@@ -344,11 +340,11 @@ directory (i.e. the ansible-probes directory in the root directory of the
 website project).
 
 ## Data exporting
-When the button is pressed, the web server for checks which probes are
+When the button is pressed, the web server first checks which probes are
 connected. From that it will generate an Ansible inventory file (a file containing
 information about each probe to be updated) in inventory/, and a known_hosts file
 for use with SSH. After that it will export some configs for the probes that are
-connected, of which are going to be updated.
+connected and are going to be updated.
 
 Ansible will first look in group_vars/all for config files, before checking
 group_vars/[username] and at last host_vars/[probe MAC]. For example will the
@@ -378,7 +374,7 @@ directory.
 After the Ansible inventory, known_hosts and configuration files have been
 exported, the web server will start Ansible in a subprocess, and tell it to
 pipe all its ouput to a logfile in logs/, with the filename equal to the
-username of the logged in user. The server will read this file each time the
+username of the logged in user. The server will parse this file each time the
 probes webpage loads, and will display the current status.
 
 ## Ansible tasks
@@ -401,10 +397,10 @@ update to it, it will be ready to do WiFi measurements/probing.
 
 ## Booting the probe
 After being shutdown as described in [The WiFi dongle shutdown script][], the
-probe will automatically begin measuring as long as *no ethernet cable is
-connected*. The reason for this is that if an ethernet cable is conncted, the
-measurements may go over ethernet instead (not all programs honor interface
-specification). There will also be name server issues.
+probe will automatically begin measuring. The WiFi dongle must logically
+be connected, but an ethernet cable can also be connected if desired. This
+can be useful as a safe-guard if e.g. an erroneous config is pushed, which
+locks the probe out from the WiFi.
 
 When booting, the probe will first make a ramdisk and copy the WiFi scripts to
 it. After that has been done, the control program will start. This is to
@@ -428,7 +424,8 @@ connected to the internet), before running this endless loop:
 serially (i.e. not in parallel).
 - Read the results_report file. If it is not empty:
     - Parse its content to a database friendly format
-      (at the moment just for InfluxDB), and send it to the database.
+      (for the moment ElasticSearch is used) and send it to the database.
+    - Clear the results_report file
 - Wait for 2 seconds and repeat.
 
 ## Logging
@@ -464,7 +461,7 @@ The following scripts are available. As default, all of them are enabled:
 | check_http_v6.sh  | Measure HTTP and DNS request time for IPv6
 | rtt4.sh           | Measure round trip time for IPv4
 | rtt6.sh           | Measure round trip time for IPv6
-| run_owping4.sh    | Measure connection time for IPv4
-| run_owping6.sh    | Measure connection time for IPv6
+| run_owping4.sh    | Measure one-way connection time for IPv4
+| run_owping6.sh    | Measure one-way connection time for IPv6
 | run_bwctl4.sh     | Measure throughput for IPv4
 | run_bwctl6.sh     | Measure throughput for IPv6
