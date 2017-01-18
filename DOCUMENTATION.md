@@ -1,7 +1,7 @@
 ---
 title: WiFi probe system documentation
 author: Written by Fredrik Strupe
-date: Last updated 2016-08-19
+date: Last updated 2017-01-18
 ---
 
 # About this document
@@ -121,8 +121,6 @@ image_generation/probe_init.sh. It essentially does the following things:
 - Gather wlan0 MAC address
 - Register pub SSH key with server (identify with MAC) (see [Association][])
 - If registration is successful, receive a port number (see [SSH port query][])
-- Generate an autossh command (rev. SSH) with the received port, and 
-  wrap it in a systemd unit file
 - Generate a systemd unit file that runs the create_ssh_tunnel.sh script
     - In addition to connecting to the server via ssh, this script also modifies
       the network routing table to make sure only the connection to the server
