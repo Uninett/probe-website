@@ -34,17 +34,17 @@
           <tr>
             {% if probe.associated %}
             <td>
-              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'org:{{ organization }}%20AND%20name:{{ probe.name }}')))">
+              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}%3F_g%3D%28time%3A%28from%3Anow-4h%2Cmode%3Aquick%2Cto%3Anow%29%29%26_a%3D%28query%3A%28query_string%3A%28query%3A%27org%3A{{ organization }}%2520AND%2520name%3A{{ probe.name }}%27%29%29%29">
               {{ probe.name }}
               </a>
             </td>
             <td>
-              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'mac:{{ probe.storage_id }}')))">
+              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}%3F_g%3D%28time%3A%28from%3Anow-4h%2Cmode%3Aquick%2Cto%3Anow%29%29%26_a%3D%28query%3A%28query_string%3A%28query%3A%27mac%3A{{ probe.storage_id }}%27%29%29%29">
               {{ probe.id }}
               </a>
             </td>
             <td>
-              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}?_g=(time:(from:now-4h,mode:quick,to:now))&_a=(query:(query_string:(query:'org:{{ organization }}%20AND%20location:{{ probe.location }}')))">
+              <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}%3F_g%3D%28time%3A%28from%3Anow-4h%2Cmode%3Aquick%2Cto%3Anow%29%29%26_a%3D%28query%3A%28query_string%3A%28query%3A%27org%3A{{ organization }}%2520AND%2520location%3A{{ probe.location}}%27%29%29%29">
               {{ probe.location }}
               </a>
             </td>
