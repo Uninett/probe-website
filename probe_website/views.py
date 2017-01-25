@@ -150,6 +150,7 @@ def probes():
     More specifically, the following can be done via POST:
         - Add a new probe
         - Remove a probe
+        - Reboot a probe
         - Renew a probe's association period (if not already associated)
         - Push configurations to probes (i.e. run Ansible)
     """
@@ -158,6 +159,13 @@ def probes():
         action = request.form.get('action', '')
         if action == 'new_probe':
             form_parsers.new_probe(current_user.username)
+        elif action == 'reboot_probe':
+            probe_id = request.form.get('probe_id', '')
+            probe = database.get_probe(probe_id)
+            if probe is not None and probe.user.username == current_user.username and probe.associated:
+                success = util.reboot_probe(probe.port)
+                if not success:
+                    flash('Unable to reboot probe (possibly no connection)')
         elif action == 'remove_probe':
             probe_id = request.form.get('probe_id', '')
             success = database.remove_probe(current_user.username, probe_id)

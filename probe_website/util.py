@@ -156,6 +156,21 @@ def get_interface_connection_status(port):
     return None
 
 
+def reboot_probe(port):
+    """Reboot the probe connected to <port> over SSH"""
+    command = ['ssh',
+               '-p', str(port),
+               '-o', 'UserKnownHostsFile={}/known_hosts'.format(settings.ANSIBLE_PATH),
+               'root@localhost',
+               'reboot']
+    try:
+        subprocess.call(command, timeout=20)
+    except (subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return False
+
+    return True
+
+
 def strip_id(data):
     """Remove all 'id' dictionary keys in 'data'.
 

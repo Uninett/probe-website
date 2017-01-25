@@ -25,7 +25,7 @@
             <th>Connection status (eth0 / wlan0)</th>
             <th>Update status</th>
             {% endif %}
-            <th colspan="2">Actions</th>
+            <th colspan="3">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -78,6 +78,12 @@
             </td>
             {% endif %}
             <td>
+              <form method="POST">
+                <input type="hidden" name="probe_id" value="{{ probe.id }}"/>
+                <button type="submit" class="btn btn-default" name="action" value="reboot_probe">Reboot</button>
+              </form>
+            </td>
+            <td>
               <a href="{{ url_for('probe_setup', id=probe.id) }}">
                 <button type="button" class="btn btn-default" name="edit">Edit</button>
               </a>
@@ -85,7 +91,7 @@
             <td>
               <form method="POST">
                 <input type="hidden" name="probe_id" value="{{ probe.id }}"/>
-                <button type="submit" class="btn btn-default" name="action" value="remove_probe">Remove</button>
+                <button type="submit" class="btn btn-default" onclick="return confirm('Are you sure you want to remove this probe?');" name="action" value="remove_probe">Remove</button>
               </form>
             </td>
           </tr>
@@ -102,7 +108,7 @@
               <td>
                 <input type="text" class="form-control" name="probe_location" required>
               </td> 
-              <td colspan="5">
+              <td colspan="6">
                 <button type="submit" class="btn btn-lg btn-default" name="action" value="new_probe">Add new probe</button>
               </td>
             </form>
