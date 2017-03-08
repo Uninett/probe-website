@@ -212,6 +212,9 @@ def probes():
             else:
                 flash(settings.INFO_MESSAGE['ansible_already_running'], 'info')
 
+        # Redirect to avoid re-POSTing
+        return redirect(url_for('probes'))
+
     probes = database.get_all_probes_data(current_user.username)
     return render_template('probes.html',
                            probes=probes,
