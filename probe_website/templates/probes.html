@@ -56,12 +56,13 @@
             <td>
               <form method="POST">
                 <input type="hidden" name="probe_id" value="{{ probe.id }}"/>
+                {# NOTE: we use the word "associated" instead of "identified" in the backend for legacy reasons #}
                 {% if probe.associated %}
-                <button type="submit" class="btn btn-success" name="action" value="renew_period" disabled>Associated</button>
+                <button type="submit" class="btn btn-success" name="action" value="renew_period" disabled>Identified</button>
                 {% elif not probe.association_period_expired %}
-                <button type="submit" class="btn btn-warning" name="action" value="renew_period">Waiting for association...<br>(Click to renew period)</button>
+                <button type="submit" class="btn btn-warning" name="action" value="renew_period">Waiting for identification...<br>(Click to renew period)</button>
                 {% else %}
-                <button type="submit" class="btn btn-danger" name="action" value="renew_period">Association period expired<br>(Click to renew period)</button>
+                <button type="submit" class="btn btn-danger" name="action" value="renew_period">Identification period expired<br>(Click to renew period)</button>
                 {% endif %}
               </form>
             </td>

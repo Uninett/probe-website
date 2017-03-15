@@ -32,7 +32,7 @@ This page contains instructions on how to set up probes.
       </ul>
     </li>
     <li>Go to the <a href="{{ url_for('databases') }}">Databases</a> tab, choose which database types you want to use and add required information. If you only want to use UNINETT's databases, you can skip this step.</li>
-    <li>Now you must register the RPi under the <a href="{{ url_for('probes') }}">Probes</a> tab. The WiFi dongle's MAC address will be printed on the dongle itself. Note that this registration can be done at any time, but the RPi will not associate with the server before it is done.
+    <li>Now you must register the RPi under the <a href="{{ url_for('probes') }}">Probes</a> tab. The WiFi dongle's MAC address will be printed on the dongle itself. Note that this registration can be done at any time, but the RPi will not identify itself to the server before it is done.
       <ol>
         <li>Fill in the probe's name, dongle's MAC address, the probe's location, and then click 'Add new probe'.</li>
         <li>Click 'Edit' on a probe and add the network credentials of the network you want the probe to measure. You can also change the interval at which each WiFi test should be run. Note that if you're adding multiple probes, and they will all have the same (or almost the same) credentials, make sure to click 'Save configuration as default', as this will make sure all probes added after that will have these credentials.</li>
@@ -46,13 +46,13 @@ This page contains instructions on how to set up probes.
         <li>Power cable</li>
       </ul>
     </li>
-    <li>The RPi will automatically initiate a setup procedure at first boot, where it installs necessary programs and associates itself with the server. <em>Do not cut the power while the RPi is doing this.</em> Note that this can take 20-30 minutes.</li> 
-    <li>The RPi is ready when you see a green 'Associated' button and 'Up' under 'Connection status' in the <a href="{{ url_for('probes') }}">Probes</a> tab (you may need to refresh the page). If the button is red, click on it to renew the association period.
+    <li>The RPi will automatically initiate a setup procedure at first boot, where it installs necessary programs and identifies itself with the server. <em>Do not cut the power while the RPi is doing this.</em> Note that this can take 20-30 minutes.</li> 
+    <li>The RPi is ready when you see a green 'Identified' button and 'Up' under 'Connection status' in the <a href="{{ url_for('probes') }}">Probes</a> tab (you may need to refresh the page). If the button is red, click on it to renew the identification period.
       <ol>
         <li>If the RPi is not ready after 30-60 min, make sure the ethernet cable has a working internet connection.</li>
       </ol>
     </li>
-    <li>If the network credentials have already been added, you can now click on 'Push configuration to probes' to update the probes with the added information. This can take a while. Note that you should wait for all your probes to be associated before doing this, as all associated probes will be updated at once.</li>
+    <li>If the network credentials have already been added, you can now click on 'Push configuration to probes' to update the probes with the added information. This can take a while. Note that you should wait for all your probes to be identified before doing this, as all identified probes will be updated at once.</li>
     <li>After the update is done ('Update status' says completed), power off the RPi by disconnecting/pulling out the <em>WiFi dongle</em>. This will initiate a shutdown procedure, and is how the probe must be shut down to avoid file corruption and ensure proper disconnection with the server. After the green light on the RPi stops blinking (will take a few seconds), you can cut the power and remove the ethernet cable. Don't forget to plug the WiFi dongle back in.</li>
     <li>The probe will automatically start measuring the network next time power is connected, as long as the WiFi dongle is connected (the ethernet cable can be either connected or disconnected)</li>
     <li>Further updates can be pushed over WiFi without the ethernet cable being present, though there may be some connectivity issues. So it's best to have both the dongle and an ethernet cable connected. If an update fails when only connected over WiFi, it may work to just try again.</li>
