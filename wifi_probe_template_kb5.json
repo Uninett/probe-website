@@ -14,7 +14,6 @@
           "type": "date",
           "index": "not_analyzed"
         },
-
         "name": {
           "type": "string",
           "index": "not_analyzed"
@@ -31,7 +30,6 @@
           "type": "string",
           "index": "not_analyzed"
         },
-
         "bwdo_v4_any": {
           "type": "float",
           "index": "not_analyzed"
@@ -56,11 +54,43 @@
           "type": "float",
           "index": "not_analyzed"
         },
+        "ow_delay_min_v4_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ow_delay_median_v4_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ow_delay_max_v4_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ow_delay_error_v4_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
         "owj_v6_any": {
           "type": "float",
           "index": "not_analyzed"
         },
         "owpl_v6_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ow_delay_min_v6_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ow_delay_median_v6_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ow_delay_max_v6_any": {
+          "type": "float",
+          "index": "not_analyzed"
+        },
+        "ow_delay_error_v6_any": {
           "type": "float",
           "index": "not_analyzed"
         },
