@@ -6,13 +6,14 @@
 
 <h1>Login</h1>
 
+{% if feide_enabled %}
 <p style="padding:20px;">
   <a href="{{ url_for('oauth_authorize') }}">
     <button type="button" class="btn btn-primary btn-lg" name="feide_login">Log in with Feide</button>
   </a>
 </p>
-
 <p style="padding:30px;">or if you have a pre-made account:</p>
+{% endif %}
 
 <form class="form-horizontal" method="POST">
 

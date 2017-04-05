@@ -2,7 +2,7 @@ from probe_website import app
 from flask import render_template, request, abort, redirect, url_for, flash
 import probe_website.database
 from probe_website.database import User, Probe
-from probe_website import settings, form_parsers, util, messages
+from probe_website import settings, form_parsers, util, messages, secret_settings
 from probe_website import ansible_interface as ansible
 from probe_website.oauth import DataportenSignin
 import flask_login
@@ -60,7 +60,8 @@ def login():
         else:
             flash('Invalid login', 'error')
 
-    return render_template('login.html')
+    feide_enabled = secret_settings.OAUTH_CREDENTIALS['id'] != 'ClientID'
+    return render_template('login.html', feide_enabled=feide_enabled)
 
 
 @app.route('/__oauth/authorize')
