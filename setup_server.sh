@@ -68,6 +68,6 @@ EOF
 fi
 
 
-echo '[+] Add paths to config files'
-sed -i "s|ADD_PROJECT_PATH_HERE|${CURR_DIR}|g" "${CURR_DIR}/probe_website/settings.py"
-sed -i "s|ADD_CERT_DIR_HERE|${CURR_DIR}/ansible-probes/certs|g" "${CURR_DIR}/ansible-probes/group_vars/all/locations"
+# echo '[+] Add paths to config files'
+# sed -i "s|ADD_PROJECT_PATH_HERE|${CURR_DIR}|g" "${CURR_DIR}/probe_website/settings.py"
+# sed -i "s|ADD_CERT_DIR_HERE|${CURR_DIR}/ansible-probes/certs|g" "${CURR_DIR}/ansible-probes/group_vars/all/locations"
