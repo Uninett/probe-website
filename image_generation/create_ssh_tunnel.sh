@@ -47,5 +47,12 @@ if [[ "$default_eth_gateway" != "" && "$server_addr" != "" ]]; then
     route del default gw $default_eth_gateway
 fi
 
+# If the user has selected the uninett elasticsearch server, do port
+# forwarding to it
+tunnel=""
+if [[ $(find . -name db_configs.json -exec jq -r .elastic.status "{}" \; -quit) == "uninett" ]]; then
+    tunnel="-L 9200:wifiprobeelk.labs.uninett.no:9200"
+fi
+
 # Start the ssh connection
-ssh -N -T -o "ExitOnForwardFailure yes" -o "StrictHostKeyChecking no" -L 9200:wifiprobeelk.labs.uninett.no:9200 -R${ssh_port}:localhost:22 ${server_user}@${server_addr}                                                                
+ssh -N -T -o "ExitOnForwardFailure yes" -o "StrictHostKeyChecking no" ${tunnel} -R${ssh_port}:localhost:22 ${server_user}@${server_addr}                                                                

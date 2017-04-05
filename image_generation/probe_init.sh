@@ -50,7 +50,7 @@ if [[ ! $(apt-get update) ]]; then
     exit 1
 fi
 
-apt-get --yes --allow-unauthenticated install curl dnsutils
+apt-get --yes --allow-unauthenticated install curl dnsutils jq
 
 
 if [[ ! -f ~/.ssh/id_rsa ]]; then
