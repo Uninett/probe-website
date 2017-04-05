@@ -81,6 +81,11 @@ while true; do
     echo "[~] Attempting to register ssh key with server"
     resp=$(curl -s "https://${SERVER_ADDRESS}/register_key" --data-urlencode "mac=${mac}" --data-urlencode "pub_key=${pub_key}" --data-urlencode "host_key=${host_key}")
 
+    if [[ ${?} -eq 35 ]]; then
+        # SSL is not available
+        resp=$(curl -s "http://${SERVER_ADDRESS}/register_key" --data-urlencode "mac=${mac}" --data-urlencode "pub_key=${pub_key}" --data-urlencode "host_key=${host_key}")
+    fi
+
     if [[ "${resp}" != "success" ]]; then
         log_error "Error when registering key: ${resp}"
         # Continue if the probe has already been registered
