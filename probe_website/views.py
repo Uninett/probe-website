@@ -2,7 +2,7 @@ from probe_website import app
 from flask import render_template, request, abort, redirect, url_for, flash
 import probe_website.database
 from probe_website.database import User, Probe
-from probe_website import settings, form_parsers, util
+from probe_website import settings, form_parsers, util, messages
 from probe_website import ansible_interface as ansible
 from probe_website.oauth import DataportenSignin
 import flask_login
@@ -130,7 +130,7 @@ def databases():
             flash('Settings successfully saved', 'info')
         else:
             database.revert_changes()
-            flash(settings.ERROR_MESSAGE['invalid_settings'], 'error')
+            flash(messages.ERROR_MESSAGE['invalid_settings'], 'error')
 
     db_info = database.get_database_info(current_user.username)
 
@@ -210,7 +210,7 @@ def probes():
                 ansible.export_known_hosts(database)
                 ansible.run_ansible_playbook(current_user.username)
             else:
-                flash(settings.INFO_MESSAGE['ansible_already_running'], 'info')
+                flash(messages.INFO_MESSAGE['ansible_already_running'], 'info')
 
         # Redirect to avoid re-POSTing
         return redirect(url_for('probes'))
@@ -347,7 +347,7 @@ def edit_user():
             return redirect(url_for('user_managment'))
         else:
             database.revert_changes()
-            flash(settings.ERROR_MESSAGE['invalid_settings'], 'error')
+            flash(messages.ERROR_MESSAGE['invalid_settings'], 'error')
 
     user_data = database.get_user_data(username)
     return render_template('edit_user.html',

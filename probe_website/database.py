@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker, relationship
 from sqlalchemy.ext.declarative import declarative_base
 from re import fullmatch
-from probe_website import util, settings
+from probe_website import util, settings, messages
 from probe_website import ansible_interface as ansible
 from flask import flash
 
@@ -491,7 +491,7 @@ class DatabaseManager():
             # we don't use the two_g and five_g at the moment
             if net_conf.name == 'any' and not net_conf.is_filled():
                 if with_warning:
-                    message = settings.ERROR_MESSAGE['fill_out_network_credentials'].format(
+                    message = messages.ERROR_MESSAGE['fill_out_network_credentials'].format(
                         str(probe.name) + ' / ' + util.convert_mac(probe.custom_id, mode='display'))
                     flash(message, 'error')
                 success = False
@@ -507,7 +507,7 @@ class DatabaseManager():
                     db_conf.status != 'uninett' and
                     not db_conf.is_filled()):
                 if with_warning:
-                    message = settings.ERROR_MESSAGE['fill_out_database_credentials']
+                    message = messages.ERROR_MESSAGE['fill_out_database_credentials']
                     flash(message, 'error')
                 success = False
         return success

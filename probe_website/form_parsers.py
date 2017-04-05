@@ -1,5 +1,5 @@
 from flask import request, flash
-from probe_website import util, app, settings, ansible_interface
+from probe_website import util, app, settings, ansible_interface, messages
 from werkzeug.utils import secure_filename
 import os
 import shutil
@@ -179,7 +179,7 @@ def new_probe(username):
         database.save_changes()
     else:
         if not database.is_valid_id(probe_id):
-            flash(settings.ERROR_MESSAGE['invalid_mac'], 'error')
+            flash(messages.ERROR_MESSAGE['invalid_mac'], 'error')
         else:
             flash('Something went wrong when processing the entry.', 'error')
         return False
