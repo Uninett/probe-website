@@ -3,6 +3,13 @@ Clone project:
 git clone --recursive git@scm.uninett.no:maalepaaler/probe-website.git
 ```
 
+In the probe_website directory, do
+```
+cp settings.py.example settings.py
+cp secret_settings.py.example secret_settings.py
+```
+and change the config values in both files.
+
 Execute various setup tasks (this will only make the server ready as a local dev server, i.e. can be run directly with Flask. For apache/nginx, further manual configuration is necessary):
 ```
 cd probe-website

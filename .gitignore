@@ -6,3 +6,5 @@
 *.img
 *.img.xz
 *.py[cod]
+settings.py
+secret_settings.py
