@@ -22,8 +22,4 @@ export FLASK_APP=runserver.py
 flask run
 ```
 
-For documentation, see the document DOCUMENTATION.md. To export the markdown file to a nice and fancy PDF file, install pandoc and run the following command:
-```
-pandoc --number-sections --toc -o documentation.pdf -f markdown DOCUMENTATION.md
-```
-(There is a PDF version in redmine too.)
+For documentation, see: http://wifiprobe-doc.paas.uninett.no/
