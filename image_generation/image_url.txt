@@ -1,4 +1,4 @@
-Different iamges:
+Different images:
 https://www.offensive-security.com/kali-linux-arm-images/
 
 Current image:

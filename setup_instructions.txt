@@ -1,7 +1,9 @@
+(NB: The setup_server.sh script does some of these steps, but not all of them (not 4, 6, 7))
 The following needs to be done before starting the web server (this should be automated with a script):
 
 0. The following programs need to be installed:
     - python3
+    - python3-pip
     - nc (netcat)
     - sqlite3
 

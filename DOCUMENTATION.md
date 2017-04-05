@@ -9,9 +9,8 @@ date: Last updated 2017-01-18
 This document is meant as a technical documentation on how the WiFi probing
 system works as a whole. It is meant to give an overview of the system, and not
 necessarily explain the minute details of each operation. For that you can
-check out the code, as it also contains some documentation. Also check out the
-latest presentation uploaded together with this document, as it contains a good
-bit of documentation too, especially in the form of flowcharts and pictures.
+check out the code (in a separate repo for the time being), as it also contains
+some documentation.
 
 The project mainly consists of the following parts:
 
