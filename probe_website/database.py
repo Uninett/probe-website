@@ -123,7 +123,7 @@ class DatabaseManager():
         """Load default scripts for probe from Ansible configs. The default
         scripts will either be the defaults for 'username' if any defaults
         have been set, or the global defaults if no such defaults exist"""
-        configs = ansible.load_default_config(username, 'script_configs')
+        configs = ansible.load_default_config(username, 'script_configs.yml')
 
         if 'default_script_configs' in configs:
             configs = configs['default_script_configs']
