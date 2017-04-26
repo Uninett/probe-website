@@ -58,8 +58,8 @@ def export_to_inventory(username, database):
         makedirs(dir_path)
 
     user = database.get_user(username)
-    with open(os.path.join(dir_path, username), 'w') as f:
-        f.write('[{}]\n'.format(username))
+    with open(os.path.join(dir_path, username), 'wb') as f:
+        f.write('[{}]\n'.format(username).encode('utf-8'))
         for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
             if (probe.associated and
                     util.is_probe_connected(probe.port) and
@@ -70,7 +70,8 @@ def export_to_inventory(username, database):
                             probe.port,
                             username,
                             probe.name)
-                f.write(entry + '\n')
+                f.write(entry.encode('utf-8'))
+                f.write('\n'.encode('utf-8'))
 
 
 def export_known_hosts(database):
@@ -179,7 +180,7 @@ def run_ansible_playbook(username):
                '--vault-password-file', os.path.join(settings.ANSIBLE_PATH, 'vault_pass.txt'),
                "--ssh-common-args='-o UserKnownHostsFile={}/known_hosts'".format(settings.ANSIBLE_PATH)]
 
-    with open(inventory, 'r') as f:
+    with open(inventory, 'rb') as f:
         # Do not run Ansible if the inventory file is empty
         # (the first line will be the username)
         if len(f.readlines()) <= 1:
@@ -285,9 +286,9 @@ def _read_playbook_status(username):
         return status
 
     completed = False
-    with open(log_file, 'r') as log_f, open(inventory_file, 'r') as inv_f:
+    with open(log_file, 'r') as log_f, open(inventory_file, 'rb') as inv_f:
         log_cont = log_f.read()
-        inv_cont = inv_f.read()
+        inv_cont = inv_f.read().decode('utf-8')
         # Ansible is done updating
         if 'PLAY RECAP' in log_cont:
             # Matches lines like this, and extracts the numbers:
