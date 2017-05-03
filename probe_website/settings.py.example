@@ -1,9 +1,14 @@
 # The path to the project root directory
 ROOT_DIR = '/abs/path/to/probe-website/'
 
-# The path to the the database file. Needs to touched before starting web server
-# Absolute paths must be prefixed with sqlite:////
-# (Relative paths use sqlite:///)
+# The path to the the database (file) as used by SQLAlchemy. 
+# For SQLite:
+# - The database file must be touched before starting the web server
+# - Absolute paths must be prefixed with sqlite:////
+#   (Relative paths use sqlite:///)
+# For MySQL:
+# - Make sure mysqlclient is installed (python package)
+# - URL format: 'mysql+mysqldb://<username>:<password>@localhost/<db_name>'
 DATABASE_URL = 'sqlite:////abs/path/to/database.db'
 
 # This doesn't need to be changed
