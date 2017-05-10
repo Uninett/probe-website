@@ -10,6 +10,7 @@ from flask_login import current_user
 from collections import OrderedDict
 from datetime import datetime
 import random
+import re
 
 database = probe_website.database.DatabaseManager(settings.DATABASE_URL)
 form_parsers.set_database(database)
@@ -207,7 +208,13 @@ def probes():
                         ansible.export_host_config(probe.custom_id,
                                                {'networks': data},
                                                'network_configs')
-                ansible.export_to_inventory(current_user.username, database)
+                # Check which probes are selected
+                selected_probes = []
+                for entry in request.form:
+                    match = re.fullmatch('selected\-([0-9a-f]{12})', entry)
+                    if match:
+                        selected_probes.append(match.group(1))
+                ansible.export_to_inventory(current_user.username, database, selected_probes)
                 ansible.export_known_hosts(database)
                 ansible.run_ansible_playbook(current_user.username)
             else:

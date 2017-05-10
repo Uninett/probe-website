@@ -42,7 +42,7 @@ def export_host_config(probe_id, data, filename):
 
 
 # Make a hosts file for this user at <ansible_root>/inventories/username/hosts
-def export_to_inventory(username, database):
+def export_to_inventory(username, database, selected_probes=None):
     """Export an Ansible hosts file for 'username' at
     <ansible_root>/inventory/<username> from the supplied SQL database
 
@@ -50,6 +50,8 @@ def export_to_inventory(username, database):
     [<username>]
     <mac> ansible_host=localhost ansible_port=<port> probe_name=<name>
     ...
+
+    selected_probes=None means select all valid probes
     """
     from probe_website.database import Probe
 
@@ -61,6 +63,8 @@ def export_to_inventory(username, database):
     with open(os.path.join(dir_path, username), 'wb') as f:
         f.write('[{}]\n'.format(username).encode('utf-8'))
         for probe in database.session.query(Probe).filter(Probe.user_id == user.id).all():
+            if selected_probes and probe.custom_id not in selected_probes:
+                continue
             if (probe.associated and
                     util.is_probe_connected(probe.port) and
                     database.valid_network_configs(probe) and

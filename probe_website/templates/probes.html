@@ -17,6 +17,12 @@
       <table class="table table-bordered">
         <thead>
           <tr>
+            <th>
+              <label>
+                Select
+                <input type="checkbox" name="select-all" id="select-all">
+              </label>
+            </th>
             <th>Name</th>
             <th>MAC address</th>
             <th>Location</th>
@@ -32,6 +38,9 @@
 
         {% for probe in probes %}
           <tr>
+            <td>
+              <input type="checkbox" form="push-config-form" name="selected-{{ probe.storage_id }}" id="selected-{{ probe.id }}">
+            </td>
             {% if probe.associated %}
             <td>
               <a href="https://wifiprobeelk.labs.uninett.no/mellon/login?ReturnTo=https%3A%2F%2Fwifiprobeelk.labs.uninett.no%2Fapp%2Fkibana%23%2Fdashboard%2F{{ kibana_dashboard }}%3F_g%3D%28time%3A%28from%3Anow-4h%2Cmode%3Aquick%2Cto%3Anow%29%29%26_a%3D%28query%3A%28query_string%3A%28query%3A%27org%3A%22{{ organization }}%22%2520AND%2520name%3A%22{{ probe.name }}%22%27%29%29%29">
@@ -100,6 +109,7 @@
         
           <tr>
             <form class="form-horizontal" method="POST">
+              <td></td>
               <td>
                 <input type="text" class="form-control" name="probe_name" required>
               </td> 
@@ -194,16 +204,40 @@
     });
   };
 
-  // Run updates at page load, and then at 30 second intervals  
-  $(document).ready(function () {
+  $(document).ready(function (event) {
     update_connection_status();
     update_ansible_status();
+    // Run updates at page load, and then at 30 second intervals
     setInterval(update_connection_status, 30000);
     setInterval(update_ansible_status, 30000);
+    $("#push-config-form").submit(function(event) {
+      var one_selected = false;
+      $('input[id^="selected-"]').each(function() {
+        if(this.checked) {
+          one_selected = true;
+        }
+      });
+      if(!one_selected) {
+        event.preventDefault();
+        alert("Please select at least one probe");
+      }
+    });
+  });
+
+  $('#select-all').click(function(event) {
+    if(this.checked) {
+      $('input[id^="selected-"]').each(function() {
+        this.checked = true;
+      });
+    } else {
+      $('input[id^="selected-"]').each(function() {
+        this.checked = false;
+      });
+    }
   });
 </script>
 
-<form method="POST">
+<form id="push-config-form" method="POST">
   <button type="submit" class="btn btn-lg btn-primary" name="action" value="push_config">
     Push configuration to probes
   </button>
