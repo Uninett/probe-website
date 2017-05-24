@@ -1,6 +1,6 @@
 Clone project:
 ```
-git clone --recursive git@scm.uninett.no:maalepaaler/probe-website.git
+git clone --recursive https://github.com/UNINETT/probe-website.git
 ```
 
 In the probe_website directory, do
