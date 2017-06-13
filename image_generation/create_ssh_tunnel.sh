@@ -53,6 +53,9 @@ tunnel=""
 if [[ $(find . -name db_configs.json -exec jq -r .elastic.status "{}" \; -quit) == "uninett" ]]; then
     tunnel="-L 9200:wifiprobeelk.labs.uninett.no:9200"
 fi
+if [[ $(find . -name db_configs.json -exec jq -r .wifimon.status "{}" \; -quit) == "grnet" ]]; then
+    tunnel="-L 8443:wm11-gn3-sa2t5.vm.grnet.gr:8443"
+fi
 
 # Start the ssh connection
 ssh -N -T -o "ExitOnForwardFailure yes" -o "StrictHostKeyChecking no" ${tunnel} -R${ssh_port}:localhost:22 ${server_user}@${server_addr}                                                                

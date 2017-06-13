@@ -118,6 +118,7 @@ class DatabaseManager():
         """Add InfluxDB and Elastic search as default databases for 'user'"""
         self.add_database(user, 'influxdb', '', '', '', '', '', 'disabled')
         self.add_database(user, 'elastic', '', '', '', '', '', 'uninett')
+        self.add_database(user, 'wifimon', '', '', '', '', '', 'grnet')
 
     def load_default_scripts(self, probe, username):
         """Load default scripts for probe from Ansible configs. The default
