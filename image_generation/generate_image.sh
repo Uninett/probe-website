@@ -12,11 +12,11 @@
 #   - udev script for shutting down probe when wifi dongle is yanked out
 
 
-USAGE="Usage: ${0} 
-<image file (.img)> 
-<wifi dongle driver (.ko)> 
-<web server address/hostname> 
-<(unprivileged) server user used for reverse ssh> 
+USAGE="Usage: ${0}
+<image file (.img)>
+<wifi dongle driver (.ko)>
+<web server address/hostname>
+<(unprivileged) server user used for reverse ssh>
 <main (privileged) user's public ssh key>"
 
 if [[ ${#} != 5 ]]; then
@@ -72,7 +72,7 @@ cp "${MAIN_PUBKEY}" "${MOUNT_DIR}/root/init/main_key.pub"
 echo "[+] Transferring server host key (for known_hosts)"
 # Remove port part
 server_host=$(echo "${SERVER_ADDRESS}" | sed 's/:.*//g')
-ssh-keyscan -t rsa localhost | sed "s/localhost/${server_host}/g" > "${MOUNT_DIR}/root/init/host_key"
+ssh-keyscan -t rsa ${server_host} > "${MOUNT_DIR}/root/init/host_key"
 
 
 echo "[+] Transferring wifi driver"
