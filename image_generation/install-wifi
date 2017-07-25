@@ -140,7 +140,7 @@ fetch_driver() {
 	elif cat .lsusb | grep -i '148F:7650\|0B05:17D3\|0E8D:760A\|0E8D:760B\|13D3:3431\|13D3:3434\|148F:6370\|148F:7601\|148F:760A\|148F:760B\|148F:760C\|148F:760D\|2001:3D04\|2717:4106\|2955:0001\|2955:1001\|2955:1003\|2A5F:1000\|7392:7710' ; then
 		driver=mt7601
 	# check for mt7610u compatible driver
-        elif cat .lsusb | grep -i '0E8D:7650\|0E8D:7630\|2357:0105\|0DF6:0079\|0BDB:1011\|7392:C711\|20F4:806B\|293C:5702\|057C:8502\|04BB:0951\|07B8:7610\|0586:3425\|2001:3D02\|2019:AB31\|0DF6:0075\|0B05:17DB\|0B05:17D1\|148F:760A\|148F:761A\|7392:B711\|7392:A711\|0E8D:7610\|13B1:003E\|148F:7610' ; then
+  elif cat .lsusb | grep -i '0E8D:7650\|0E8D:7630\|2357:0105\|0DF6:0079\|0BDB:1011\|7392:C711\|20F4:806B\|293C:5702\|057C:8502\|04BB:0951\|07B8:7610\|0586:3425\|2001:3D02\|2019:AB31\|0DF6:0075\|0B05:17DB\|0B05:17D1\|148F:760A\|148F:761A\|7392:B711\|7392:A711\|0E8D:7610\|13B1:003E\|148F:7610' ; then
 		driver=mt7610
 	# check for mt7612u compatible driver
 	elif cat .lsusb | grep -i '0E8D:7662\|0E8D:7632\|0B05:17C9\|0E8D:7612\|045E:02E6\|0B05:17EB\|0846:9053\|0B05:180B\|0846:9014' ; then
@@ -213,8 +213,8 @@ check_driver() {
 
 # download uname string if it exists
 		if ! (wget -q https://github.com/Hexxeh/rpi-firmware/raw/$rpi_firmware_commit_id/$uname -O .uname_string) ; then
-		
-		
+
+
 # download the relevant kernel image if uname_string doesn't exist
 			if ! (wget -q https://github.com/Hexxeh/rpi-firmware/raw/$rpi_firmware_commit_id/$image -O .kernel) ; then
 				echo "Invalid commit-id, kernel not available for your version of the Pi, Pi $pi."
@@ -290,18 +290,18 @@ install_driver() {
 		rm install.sh > /dev/null 2>&1
 
 		module_dir="/lib/modules/$kernel+/kernel/drivers/net/wireless"
-		
+
 		if [ -f RT2870STA.dat ] ; then
 			sudo mkdir -p /etc/Wireless/RT2870STA/
 			sudo mv RT2870STA.dat /etc/Wireless/RT2870STA/
-		
+
 			if [ -f 95-ralink.rules ] ; then
 				sudo mv 95-ralink.rules /etc/udev/rules.d/
 			elif [ -f /etc/udev/rules.d/95-ralink.rules ] ; then
 				sudo rm /etc/udev/rules.d/95-ralink.rules
 			fi
 		fi
-		
+
 		if [ -f $driver.conf ] ; then
 			sudo cp $driver.conf /etc/modprobe.d/.
 			rm $driver.conf
@@ -346,7 +346,7 @@ install_driver() {
 			echo "Loading and running the new $driver driver, $driver1.ko."
 			sudo modprobe $driver1
 		fi
-		
+
 	else
 		echo
 		echo "A driver does not yet exist for this kernel."
