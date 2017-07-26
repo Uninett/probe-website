@@ -54,18 +54,22 @@ echo "dtoverlay=pi3-disable-wifi"  > ${MOUNT_DIR}/boot/config.txt
 
 
 echo "[+] Installing wifi driver"
-sudo chmod +x /usr/bin/install-wifi
-sudo install-wifi
+chmod +x /usr/bin/install-wifi
+install-wifi
 
 
-#echo "[+] Enable ssh and permit remote acess"
+echo "[+] Enable ssh and permit remote acess to root user"
 # Configure ssh to permit root login
-sudo sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+sed -i 's/PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config
 
-sudo systemctl enable ssh
+# Deny ssh for the "pi" user to prevent security issues with using default password to connect with ssh
+echo "DenyUsers pi" >> /etc/ssh/sshd_config
+
+# ssh must be enabled because it is disabled by default
+systemctl enable ssh
 
 # Restart ssh to ensure changes are applied, and to ensure that ssh is running.
-sudo service ssh restart
+service ssh restart
 
 
 if [[ ! -f ~/.ssh/id_rsa ]]; then
