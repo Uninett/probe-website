@@ -1,4 +1,4 @@
-  #!/bin/bash
+#!/bin/bash
 
 # This script should be run once (and as root), when the probe boots up for the first time
 # It does the following things:
