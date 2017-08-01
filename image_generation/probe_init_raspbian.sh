@@ -1,4 +1,4 @@
-#!/bin/bash
+  #!/bin/bash
 
 # This script should be run once (and as root), when the probe boots up for the first time
 # It does the following things:
@@ -169,7 +169,7 @@ if [[ $adapter ]]; then
     id=$(echo $adapter | awk '{ print$6 }')
     ID_VENDOR_ID=$(echo $id | cut -d ':' -f 1)
     ID_MODEL_ID=$(echo $id | cut -d ':' -f 2)
-    sudo echo 'ACTION=="remove", ENV{ID_VENDOR_ID}=="'"${ID_VENDOR_ID}"'", ENV{ID_MODEL_ID}=="'"${ID_MODEL_ID}"'", RUN+="/sbin/shutdown -h now"' > /etc/udev/rules.d/00-dongle_shutdown.rules
+    echo 'ACTION=="remove", ENV{ID_VENDOR_ID}=="'"${ID_VENDOR_ID}"'", ENV{ID_MODEL_ID}=="'"${ID_MODEL_ID}"'", RUN+="/sbin/shutdown -h now"' > /etc/udev/rules.d/00-dongle_shutdown.rules
 fi
 
 
