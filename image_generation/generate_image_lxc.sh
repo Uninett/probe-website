@@ -1,4 +1,4 @@
- #!/bin/bash
+#!/bin/bash
 
 # This script customizes a generic Raspbian Linux ARM image for use for
 # wifi monitoring probes. The generated differs from the original one
