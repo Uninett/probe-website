@@ -48,6 +48,15 @@ fi
 
 apt-get --yes --allow-unauthenticated install curl dnsutils jq
 
+# Sometimes required when apt-get fails to update and install correctly
+apt-get update --yes --fix-missing
+apt-get --yes --allow-unauthenticated install curl dnsutils jq
+
+echo "[+] Restart clock to avoid time issues when installing wifi adapter"
+systemctl enable ntp
+systemctl restart ntp
+systemctl enable fake-hwclock
+systemctl restart fake-hwclock
 
 echo "[+] Configure boot to fully disable internal wifi card"
 echo "dtoverlay=pi3-disable-wifi"  > ${MOUNT_DIR}/boot/config.txt
