@@ -57,6 +57,7 @@ systemctl enable ntp
 systemctl restart ntp
 systemctl enable fake-hwclock
 systemctl restart fake-hwclock
+ntpd -b -s 129.132.2.21
 
 echo "[+] Configure boot to fully disable internal wifi card"
 echo "dtoverlay=pi3-disable-wifi"  > ${MOUNT_DIR}/boot/config.txt
