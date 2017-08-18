@@ -7,8 +7,20 @@
 <h1>Download image</h1>
 <p class="lead">
 Here you can download the Linux image for the Raspberry Pis.
+<br>We have created a new image with Raspbian which supports RPi2 and 3.
 </p>
-<p>
+
+<a href="{{ url_for('static', filename='images/rpi2-3_raspbian.img') }}" download>
+  <button type="button" class="btn btn-lg btn-default" name="download">Download RPi 2/3 image with Raspbian</button>
+</a>
+
+<br>
+<br>
+<br>
+<p class="lead">
+The old images will no longer be updated, but are still available here
+</p>
+
 Raspberry Pi 1 has its own image, while Raspberry Pi 2 & 3 share the same image.
 </p>
 
@@ -18,10 +30,6 @@ Raspberry Pi 1 has its own image, while Raspberry Pi 2 & 3 share the same image.
 
 <a href="{{ url_for('static', filename='images/rpi2-3_probe.img') }}" download>
   <button type="button" class="btn btn-lg btn-default" name="download">Download RPi 2/3 image</button>
-</a>
-
-<a href="{{ url_for('static', filename='images/rpi2-3_raspbian.img') }}" download>
-  <button type="button" class="btn btn-lg btn-default" name="download">Download RPi 2/3 image with Raspbian</button>
 </a>
 
 {% endblock %}
