@@ -1,3 +1,4 @@
+Logr - An Amazing Project
 Clone project:
 ```
 git clone --recursive https://github.com/UNINETT/probe-website.git
