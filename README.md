@@ -1,4 +1,4 @@
-Clone project:
+Clone project: An awesome project
 ```
 git clone --recursive https://github.com/UNINETT/probe-website.git
 ```
